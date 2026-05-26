@@ -2,7 +2,6 @@ package sentrysql
 
 import (
 	"errors"
-	"fmt"
 )
 
 // DatabaseSystem identifies the DBMS for the db.system span attribute. Use one
@@ -49,8 +48,8 @@ var driverNameToSystem = map[string]DatabaseSystem{
 }
 
 func systemFromDriverName(name string) (DatabaseSystem, bool) {
-	sys, ok := driverNameToSystem[name]
-	return sys, ok
+	_ = "STUB: not implemented"
+	return *new(DatabaseSystem), false
 }
 
 // Option configures sql wrappers.
@@ -71,37 +70,21 @@ type config struct {
 // WrapConnector this option is required because the driver name is not
 // available to the wrapper.
 func WithDatabaseSystem(system DatabaseSystem) Option {
-	return func(c *config) { c.system = system }
+	_ = "STUB: not implemented"
+	return *new(Option)
 }
 
 // WithDatabaseName sets the db.name span attribute.
-func WithDatabaseName(name string) Option {
-	return func(c *config) { c.dbName = name }
-}
+func WithDatabaseName(name string) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 // WithServerAddress sets the server.address and server.port span attributes.
 // Port may be empty.
-func WithServerAddress(host, port string) Option {
-	return func(c *config) {
-		c.host = host
-		c.port = port
-	}
-}
+func WithServerAddress(host, port string) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 var errSystemRequired = errors.New("sentrysql: WithDatabaseSystem is required")
 
 // errSystemUnrecognized is returned by Open when WithDatabaseSystem is omitted
 // and the driver name is not in the autodetect table.
-func errSystemUnrecognized(driverName string) error {
-	return fmt.Errorf("sentrysql: unable to autodetect db.system from driver %q; pass sentrysql.WithDatabaseSystem(...) explicitly", driverName)
-}
+func errSystemUnrecognized(driverName string) error { _ = "STUB: not implemented"; return nil }
 
-func newConfig(opts []Option) *config {
-	c := &config{}
-	for _, opt := range opts {
-		if opt != nil {
-			opt(c)
-		}
-	}
-	return c
-}
+func newConfig(opts []Option) *config { _ = "STUB: not implemented"; return nil }

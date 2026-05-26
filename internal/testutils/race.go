@@ -2,6 +2,4 @@
 
 package testutils
 
-func IsRaceTest() bool {
-	return false
-}
+func IsRaceTest() bool { _ = "STUB: not implemented"; return false }

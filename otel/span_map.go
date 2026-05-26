@@ -24,8 +24,8 @@ type TransactionEntry struct {
 
 // HasSpan returns true if the given spanID was ever part of this transaction.
 func (te *TransactionEntry) HasSpan(spanID otelTrace.SpanID) bool {
-	_, ok := te.knownSpanIDs.Load(spanID)
-	return ok
+	_ = "STUB: not implemented"
+	return false
 }
 
 // SentrySpanMap is a mapping between OpenTelemetry spans and Sentry spans.
@@ -40,16 +40,14 @@ type SentrySpanMap struct {
 
 // Get returns the current sentry.Span associated with the given OTel traceID and spanID.
 func (ssm *SentrySpanMap) Get(traceID otelTrace.TraceID, spanID otelTrace.SpanID) (*sentry.Span, bool) {
-	entry, ok := ssm.transactions.Load(traceID)
-	if !ok {
-		return nil, false
-	}
-	return entry.spans.Load(spanID)
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
 // GetTransaction returns the transaction information for the given OTel traceID.
 func (ssm *SentrySpanMap) GetTransaction(traceID otelTrace.TraceID) (*TransactionEntry, bool) {
-	return ssm.transactions.Load(traceID)
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
 // Set stores the span and transaction information on the map. It handles both root and child spans automatically.
@@ -57,57 +55,31 @@ func (ssm *SentrySpanMap) GetTransaction(traceID otelTrace.TraceID) (*Transactio
 // If there is a cache miss on the given traceID, a transaction entry is created. Subsequent calls for the same traceID
 // just increment the active span count and store the span in the entry.
 func (ssm *SentrySpanMap) Set(spanID otelTrace.SpanID, span *sentry.Span, traceID otelTrace.TraceID) {
-	t := &TransactionEntry{root: span}
-	t.activeCount.Store(1)
-	t.spans.Store(spanID, span)
-	t.knownSpanIDs.Store(spanID, struct{}{})
-
-	if existing, loaded := ssm.transactions.LoadOrStore(traceID, t); loaded {
-		existing.activeCount.Add(1)
-		existing.spans.Store(spanID, span)
-		existing.knownSpanIDs.Store(spanID, struct{}{})
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // MarkFinished removes a span from the active set and decrements the transaction's active count.
 // When the count reaches zero, the transaction entry is removed.
 // The span ID is kept in knownSpanIDs so that HasSpan continues to work for child span creation.
 func (ssm *SentrySpanMap) MarkFinished(spanID otelTrace.SpanID, traceID otelTrace.TraceID) {
-	entry, ok := ssm.transactions.Load(traceID)
-	if !ok {
-		return
-	}
-
-	entry.spans.Delete(spanID)
-
-	if entry.activeCount.Add(-1) <= 0 {
-		// CompareAndSwap(CAS) is used to prevent a race between Set and MarkFinished.
-		// The race has two windows:
-		// 1. MarkFinished decremented activeCount to 0 but hasn't CAS'd yet -> Set Adds(1), and CAS fails keeping the
-		// transaction, since we just added a new span.
-		// 2. MarkFinished already CAS'd -> Set will store on the transaction marked for deletion (better than
-		// creating a new orphaned span).
-		if entry.activeCount.CompareAndSwap(0, -1) {
-			ssm.transactions.CompareAndDelete(traceID, entry)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
+
+// CompareAndSwap(CAS) is used to prevent a race between Set and MarkFinished.
+// The race has two windows:
+// 1. MarkFinished decremented activeCount to 0 but hasn't CAS'd yet -> Set Adds(1), and CAS fails keeping the
+// transaction, since we just added a new span.
+// 2. MarkFinished already CAS'd -> Set will store on the transaction marked for deletion (better than
+// creating a new orphaned span).
 
 // Clear removes all spans stored on the map.
-func (ssm *SentrySpanMap) Clear() {
-	ssm.transactions.Clear()
-}
+func (ssm *SentrySpanMap) Clear() { _ = "STUB: not implemented"; return }
 
 // Len returns the number of spans on the map.
 //
 // This should only be used in tests, since computing the map length is fairly expensive.
-func (ssm *SentrySpanMap) Len() int {
-	count := 0
-	ssm.transactions.Range(func(_ otelTrace.TraceID, entry *TransactionEntry) bool {
-		count += int(entry.activeCount.Load())
-		return true
-	})
-	return count
-}
+func (ssm *SentrySpanMap) Len() int { _ = "STUB: not implemented"; return 0 }
 
 var sentrySpanMap = SentrySpanMap{}

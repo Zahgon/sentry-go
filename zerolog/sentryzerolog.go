@@ -1,12 +1,10 @@
 package sentryzerolog
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"time"
 
-	"github.com/buger/jsonparser"
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
@@ -83,63 +81,15 @@ type Options struct {
 	FlushTimeout time.Duration
 }
 
-func (o *Options) SetDefaults() {
-	if len(o.Levels) == 0 {
-		o.Levels = []zerolog.Level{
-			zerolog.ErrorLevel,
-			zerolog.FatalLevel,
-			zerolog.PanicLevel,
-		}
-	}
-
-	if o.FlushTimeout == 0 {
-		o.FlushTimeout = 3 * time.Second
-	}
-}
+func (o *Options) SetDefaults() { _ = "STUB: not implemented"; return }
 
 // New creates writer with provided DSN and options.
-func New(cfg Config) (*Writer, error) {
-	client, err := sentry.NewClient(cfg.ClientOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	client.SetSDKIdentifier(sdkIdentifier)
-
-	cfg.SetDefaults()
-
-	levels := make(map[zerolog.Level]struct{}, len(cfg.Levels))
-	for _, lvl := range cfg.Levels {
-		levels[lvl] = struct{}{}
-	}
-
-	return &Writer{
-		hub:             sentry.NewHub(client, sentry.NewScope()),
-		levels:          levels,
-		flushTimeout:    cfg.FlushTimeout,
-		withBreadcrumbs: cfg.WithBreadcrumbs,
-	}, nil
-}
+func New(cfg Config) (*Writer, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // NewWithHub creates a writer using an existing sentry Hub and options.
 func NewWithHub(hub *sentry.Hub, opts Options) (*Writer, error) {
-	if hub == nil {
-		return nil, errors.New("hub cannot be nil")
-	}
-
-	opts.SetDefaults()
-
-	levels := make(map[zerolog.Level]struct{}, len(opts.Levels))
-	for _, lvl := range opts.Levels {
-		levels[lvl] = struct{}{}
-	}
-
-	return &Writer{
-		hub:             hub,
-		levels:          levels,
-		flushTimeout:    opts.FlushTimeout,
-		withBreadcrumbs: opts.WithBreadcrumbs,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Writer is a sentry events writer with std io.Writer interface.
@@ -151,152 +101,31 @@ type Writer struct {
 }
 
 // addBreadcrumb adds event as a breadcrumb.
-func (w *Writer) addBreadcrumb(event *sentry.Event) {
-	if !w.withBreadcrumbs {
-		return
-	}
-
-	breadcrumbType := "default"
-	switch event.Level {
-	case sentry.LevelFatal, sentry.LevelError:
-		breadcrumbType = "error"
-	}
-
-	category := event.Tags["category"]
-
-	data := make(map[string]interface{}, len(event.Tags))
-	for k, v := range event.Tags {
-		data[k] = v
-	}
-
-	w.hub.AddBreadcrumb(&sentry.Breadcrumb{
-		Type:     breadcrumbType,
-		Category: category,
-		Message:  event.Message,
-		Level:    event.Level,
-		Data:     data,
-	}, nil)
-}
+func (w *Writer) addBreadcrumb(event *sentry.Event) { _ = "STUB: not implemented"; return }
 
 // Write handles zerolog's json and sends events to sentry.
-func (w *Writer) Write(data []byte) (int, error) {
-	n := len(data)
+func (w *Writer) Write(data []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-	lvl, err := parseLogLevel(data)
-	if err != nil {
-		return n, nil
-	}
+// if the level is not enabled, add event as a breadcrumb
 
-	event, ok := parseLogEvent(data)
-	if !ok {
-		return n, nil
-	}
-
-	event.Level, ok = levelsMapping[lvl]
-	if !ok {
-		return n, nil
-	}
-
-	if _, enabled := w.levels[lvl]; !enabled {
-		// if the level is not enabled, add event as a breadcrumb
-		w.addBreadcrumb(event)
-		return n, nil
-	}
-
-	w.hub.CaptureEvent(event)
-	// should flush before os.Exit
-	if event.Level == sentry.LevelFatal {
-		w.hub.Flush(w.flushTimeout)
-	}
-
-	return n, nil
-}
+// should flush before os.Exit
 
 func (w *Writer) WriteLevel(level zerolog.Level, p []byte) (int, error) {
-	n := len(p)
-
-	event, ok := parseLogEvent(p)
-	if !ok {
-		return n, nil
-	}
-
-	event.Level, ok = levelsMapping[level]
-	if !ok {
-		return n, nil
-	}
-
-	if _, enabled := w.levels[level]; !enabled {
-		// if the level is not enabled, add event as a breadcrumb
-		w.addBreadcrumb(event)
-		return n, nil
-	}
-
-	w.hub.CaptureEvent(event)
-	// should flush before os.Exit
-	if event.Level == sentry.LevelFatal {
-		w.hub.Flush(w.flushTimeout)
-	}
-
-	return n, nil
+	_ = "STUB: not implemented"
+	return 0, nil
 }
+
+// if the level is not enabled, add event as a breadcrumb
+
+// should flush before os.Exit
 
 // Close forces client to flush all pending events.
 // Can be useful before application exits.
-func (w *Writer) Close() error {
-	if ok := w.hub.Flush(w.flushTimeout); !ok {
-		return ErrFlushTimeout
-	}
-	return nil
-}
+func (w *Writer) Close() error { _ = "STUB: not implemented"; return nil }
 
 func parseLogLevel(data []byte) (zerolog.Level, error) {
-	level, err := jsonparser.GetUnsafeString(data, zerolog.LevelFieldName)
-	if err != nil {
-		return zerolog.Disabled, nil
-	}
-
-	return zerolog.ParseLevel(level)
+	_ = "STUB: not implemented"
+	return *new(zerolog.Level), nil
 }
 
-func parseLogEvent(data []byte) (*sentry.Event, bool) {
-	event := sentry.NewEvent()
-	event.Timestamp = now()
-	event.Logger = logger
-
-	err := jsonparser.ObjectEach(data, func(key, value []byte, _ jsonparser.ValueType, _ int) error {
-		k := string(key)
-		switch k {
-		case zerolog.MessageFieldName:
-			event.Message = string(value)
-		case zerolog.ErrorFieldName:
-			event.Exception = append(event.Exception, sentry.Exception{
-				Value:      string(value),
-				Stacktrace: sentry.NewStacktrace(),
-			})
-		case zerolog.LevelFieldName, zerolog.TimestampFieldName:
-		case FieldUser:
-			var user sentry.User
-			err := json.Unmarshal(value, &user)
-			if err != nil {
-				event.Tags[k] = string(value)
-			} else {
-				event.User = user
-			}
-		case FieldTransaction:
-			event.Transaction = string(value)
-		case FieldFingerprint:
-			var fp []string
-			err := json.Unmarshal(value, &fp)
-			if err != nil {
-				event.Tags[k] = string(value)
-			} else {
-				event.Fingerprint = fp
-			}
-		case FieldGoVersion, FieldMaxProcs:
-		default:
-			event.Tags[k] = string(value)
-		}
-		return nil
-	})
-	return event, err == nil
-}
+func parseLogEvent(data []byte) (*sentry.Event, bool) { _ = "STUB: not implemented"; return nil, false }

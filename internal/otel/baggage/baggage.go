@@ -18,11 +18,7 @@ package baggage
 
 import (
 	"errors"
-	"fmt"
-	"net/url"
 	"regexp"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/getsentry/sentry-go/internal/otel/baggage/internal/baggage"
 )
@@ -75,171 +71,75 @@ type Property struct {
 //
 // If key is invalid, an error will be returned.
 func NewKeyProperty(key string) (Property, error) {
-	if !keyRe.MatchString(key) {
-		return newInvalidProperty(), fmt.Errorf("%w: %q", errInvalidKey, key)
-	}
-
-	p := Property{key: key, hasData: true}
-	return p, nil
+	_ = "STUB: not implemented"
+	return *new(Property), nil
 }
 
 // NewKeyValueProperty returns a new Property for key with value.
 //
 // If key or value are invalid, an error will be returned.
 func NewKeyValueProperty(key, value string) (Property, error) {
-	if !keyRe.MatchString(key) {
-		return newInvalidProperty(), fmt.Errorf("%w: %q", errInvalidKey, key)
-	}
-	if !valueRe.MatchString(value) {
-		return newInvalidProperty(), fmt.Errorf("%w: %q", errInvalidValue, value)
-	}
-
-	p := Property{
-		key:      key,
-		value:    value,
-		hasValue: true,
-		hasData:  true,
-	}
-	return p, nil
+	_ = "STUB: not implemented"
+	return *new(Property), nil
 }
 
 func newInvalidProperty() Property {
-	return Property{}
+	_ = "STUB: not implemented"
+
+	// parseProperty attempts to decode a Property from the passed string. It
+	// returns an error if the input is invalid according to the W3C Baggage
+	// specification.
+	return *new(Property)
 }
 
-// parseProperty attempts to decode a Property from the passed string. It
-// returns an error if the input is invalid according to the W3C Baggage
-// specification.
 func parseProperty(property string) (Property, error) {
-	if property == "" {
-		return newInvalidProperty(), nil
-	}
-
-	match := propertyRe.FindStringSubmatch(property)
-	if len(match) != 4 {
-		return newInvalidProperty(), fmt.Errorf("%w: %q", errInvalidProperty, property)
-	}
-
-	p := Property{hasData: true}
-	if match[1] != "" {
-		p.key = match[1]
-	} else {
-		p.key = match[2]
-		p.value = match[3]
-		p.hasValue = true
-	}
-
-	return p, nil
+	_ = "STUB: not implemented"
+	return *new(Property), nil
 }
 
 // validate ensures p conforms to the W3C Baggage specification, returning an
 // error otherwise.
-func (p Property) validate() error {
-	errFunc := func(err error) error {
-		return fmt.Errorf("invalid property: %w", err)
-	}
-
-	if !p.hasData {
-		return errFunc(fmt.Errorf("%w: %q", errInvalidProperty, p))
-	}
-
-	if !keyRe.MatchString(p.key) {
-		return errFunc(fmt.Errorf("%w: %q", errInvalidKey, p.key))
-	}
-	if p.hasValue && !valueRe.MatchString(p.value) {
-		return errFunc(fmt.Errorf("%w: %q", errInvalidValue, p.value))
-	}
-	if !p.hasValue && p.value != "" {
-		return errFunc(errors.New("inconsistent value"))
-	}
-	return nil
-}
+func (p Property) validate() error { _ = "STUB: not implemented"; return nil }
 
 // Key returns the Property key.
 func (p Property) Key() string {
-	return p.key
+	_ = "STUB: not implemented"
+
+	// Value returns the Property value. Additionally, a boolean value is returned
+	// indicating if the returned value is the empty if the Property has a value
+	// that is empty or if the value is not set.
+	return ""
 }
 
-// Value returns the Property value. Additionally, a boolean value is returned
-// indicating if the returned value is the empty if the Property has a value
-// that is empty or if the value is not set.
 func (p Property) Value() (string, bool) {
-	return p.value, p.hasValue
+	_ = "STUB: not implemented"
+	return "",
+
+		// String encodes Property into a string compliant with the W3C Baggage
+		// specification.
+		false
 }
 
-// String encodes Property into a string compliant with the W3C Baggage
-// specification.
-func (p Property) String() string {
-	if p.hasValue {
-		return fmt.Sprintf("%s%s%v", p.key, keyValueDelimiter, p.value)
-	}
-	return p.key
-}
+func (p Property) String() string { _ = "STUB: not implemented"; return "" }
 
 type properties []Property
 
 func fromInternalProperties(iProps []baggage.Property) properties {
-	if len(iProps) == 0 {
-		return nil
-	}
-
-	props := make(properties, len(iProps))
-	for i, p := range iProps {
-		props[i] = Property{
-			key:      p.Key,
-			value:    p.Value,
-			hasValue: p.HasValue,
-		}
-	}
-	return props
+	_ = "STUB: not implemented"
+	return *new(properties)
 }
 
-func (p properties) asInternal() []baggage.Property {
-	if len(p) == 0 {
-		return nil
-	}
+func (p properties) asInternal() []baggage.Property { _ = "STUB: not implemented"; return nil }
 
-	iProps := make([]baggage.Property, len(p))
-	for i, prop := range p {
-		iProps[i] = baggage.Property{
-			Key:      prop.key,
-			Value:    prop.value,
-			HasValue: prop.hasValue,
-		}
-	}
-	return iProps
-}
-
-func (p properties) Copy() properties {
-	if len(p) == 0 {
-		return nil
-	}
-
-	props := make(properties, len(p))
-	copy(props, p)
-	return props
-}
+func (p properties) Copy() properties { _ = "STUB: not implemented"; return *new(properties) }
 
 // validate ensures each Property in p conforms to the W3C Baggage
 // specification, returning an error otherwise.
-func (p properties) validate() error {
-	for _, prop := range p {
-		if err := prop.validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+func (p properties) validate() error { _ = "STUB: not implemented"; return nil }
 
 // String encodes properties into a string compliant with the W3C Baggage
 // specification.
-func (p properties) String() string {
-	props := make([]string, len(p))
-	for i, prop := range p {
-		props[i] = prop.String()
-	}
-	return strings.Join(props, propertyDelimiter)
-}
+func (p properties) String() string { _ = "STUB: not implemented"; return "" }
 
 // Member is a list-member of a baggage-string as defined by the W3C Baggage
 // specification.
@@ -258,151 +158,88 @@ type Member struct {
 // is returned if the created Member would be invalid according to the W3C
 // Baggage specification.
 func NewMember(key, value string, props ...Property) (Member, error) {
-	m := Member{
-		key:        key,
-		value:      value,
-		properties: properties(props).Copy(),
-		hasData:    true,
-	}
-	if err := m.validate(); err != nil {
-		return newInvalidMember(), err
-	}
-	//// NOTE(anton): I don't think we need to unescape here
-	// decodedValue, err := url.PathUnescape(value)
-	// if err != nil {
-	// 	return newInvalidMember(), fmt.Errorf("%w: %q", errInvalidValue, value)
-	// }
-	// m.value = decodedValue
-	return m, nil
+	_ = "STUB: not implemented"
+	return *new(Member), nil
 }
+
+//// NOTE(anton): I don't think we need to unescape here
+// decodedValue, err := url.PathUnescape(value)
+// if err != nil {
+// 	return newInvalidMember(), fmt.Errorf("%w: %q", errInvalidValue, value)
+// }
+// m.value = decodedValue
 
 func newInvalidMember() Member {
-	return Member{}
+	_ = "STUB: not implemented"
+
+	// parseMember attempts to decode a Member from the passed string. It returns
+	// an error if the input is invalid according to the W3C Baggage
+	// specification.
+	return *new(Member)
 }
 
-// parseMember attempts to decode a Member from the passed string. It returns
-// an error if the input is invalid according to the W3C Baggage
-// specification.
 func parseMember(member string) (Member, error) {
-	if n := len(member); n > maxBytesPerMembers {
-		return newInvalidMember(), fmt.Errorf("%w: %d", errMemberBytes, n)
-	}
-
-	var (
-		key, value string
-		props      properties
-	)
-
-	parts := strings.SplitN(member, propertyDelimiter, 2)
-	switch len(parts) {
-	case 2:
-		// Parse the member properties.
-		for _, pStr := range strings.Split(parts[1], propertyDelimiter) {
-			p, err := parseProperty(pStr)
-			if err != nil {
-				return newInvalidMember(), err
-			}
-			props = append(props, p)
-		}
-		fallthrough
-	case 1:
-		// Parse the member key/value pair.
-
-		// Take into account a value can contain equal signs (=).
-		kv := strings.SplitN(parts[0], keyValueDelimiter, 2)
-		if len(kv) != 2 {
-			return newInvalidMember(), fmt.Errorf("%w: %q", errInvalidMember, member)
-		}
-		// "Leading and trailing whitespaces are allowed but MUST be trimmed
-		// when converting the header into a data structure."
-		key = strings.TrimSpace(kv[0])
-		value = strings.TrimSpace(kv[1])
-		var err error
-		if !keyRe.MatchString(key) {
-			return newInvalidMember(), fmt.Errorf("%w: %q", errInvalidKey, key)
-		}
-		if !valueRe.MatchString(value) {
-			return newInvalidMember(), fmt.Errorf("%w: %q", errInvalidValue, value)
-		}
-		decodedValue, err := url.PathUnescape(value)
-		if err != nil {
-			return newInvalidMember(), fmt.Errorf("%w: %q", err, value)
-		}
-		value = decodedValue
-	default:
-		// This should never happen unless a developer has changed the string
-		// splitting somehow. Panic instead of failing silently and allowing
-		// the bug to slip past the CI checks.
-		panic("failed to parse baggage member")
-	}
-
-	return Member{key: key, value: value, properties: props, hasData: true}, nil
+	_ = "STUB: not implemented"
+	return *new(Member), nil
 }
+
+// Parse the member properties.
+
+// Parse the member key/value pair.
+
+// Take into account a value can contain equal signs (=).
+
+// "Leading and trailing whitespaces are allowed but MUST be trimmed
+// when converting the header into a data structure."
+
+// This should never happen unless a developer has changed the string
+// splitting somehow. Panic instead of failing silently and allowing
+// the bug to slip past the CI checks.
 
 // validate ensures m conforms to the W3C Baggage specification.
 // A key is just an ASCII string, but a value must be URL encoded UTF-8,
 // returning an error otherwise.
-func (m Member) validate() error {
-	if !m.hasData {
-		return fmt.Errorf("%w: %q", errInvalidMember, m)
-	}
+func (m Member) validate() error { _ = "STUB: not implemented"; return nil }
 
-	if !keyRe.MatchString(m.key) {
-		return fmt.Errorf("%w: %q", errInvalidKey, m.key)
-	}
-	//// NOTE(anton): IMO it's too early to validate the value here.
-	// if !valueRe.MatchString(m.value) {
-	// 	return fmt.Errorf("%w: %q", errInvalidValue, m.value)
-	// }
-	return m.properties.validate()
-}
+//// NOTE(anton): IMO it's too early to validate the value here.
+// if !valueRe.MatchString(m.value) {
+// 	return fmt.Errorf("%w: %q", errInvalidValue, m.value)
+// }
 
 // Key returns the Member key.
-func (m Member) Key() string { return m.key }
+func (m Member) Key() string {
+	_ = "STUB: not implemented"
 
-// Value returns the Member value.
-func (m Member) Value() string { return m.value }
+	// Value returns the Member value.
+	return ""
+}
 
-// Properties returns a copy of the Member properties.
-func (m Member) Properties() []Property { return m.properties.Copy() }
+func (m Member) Value() string {
+	_ = "STUB: not implemented"
+
+	// Properties returns a copy of the Member properties.
+	return ""
+}
+
+func (m Member) Properties() []Property { _ = "STUB: not implemented"; return nil }
 
 // String encodes Member into a string compliant with the W3C Baggage
 // specification.
 func (m Member) String() string {
+	_ = "STUB: not implemented"
 	// A key is just an ASCII string, but a value is URL encoded UTF-8.
-	s := fmt.Sprintf("%s%s%s", m.key, keyValueDelimiter, percentEncodeValue(m.value))
-	if len(m.properties) > 0 {
-		s = fmt.Sprintf("%s%s%s", s, propertyDelimiter, m.properties.String())
-	}
-	return s
+	return ""
 }
 
 // percentEncodeValue encodes the baggage value, using percent-encoding for
 // disallowed octets.
-func percentEncodeValue(s string) string {
-	const upperhex = "0123456789ABCDEF"
-	var sb strings.Builder
+func percentEncodeValue(s string) string { _ = "STUB: not implemented"; return "" }
 
-	for byteIndex, width := 0, 0; byteIndex < len(s); byteIndex += width {
-		runeValue, w := utf8.DecodeRuneInString(s[byteIndex:])
-		width = w
-		char := string(runeValue)
-		if valueRe.MatchString(char) && char != "%" {
-			// The character is returned as is, no need to percent-encode
-			sb.WriteString(char)
-		} else {
-			// We need to percent-encode each byte of the multi-octet character
-			for j := 0; j < width; j++ {
-				b := s[byteIndex+j]
-				sb.WriteByte('%')
-				// Bitwise operations are inspired by "net/url"
-				sb.WriteByte(upperhex[b>>4])
-				sb.WriteByte(upperhex[b&15])
-			}
-		}
-	}
-	return sb.String()
-}
+// The character is returned as is, no need to percent-encode
+
+// We need to percent-encode each byte of the multi-octet character
+
+// Bitwise operations are inspired by "net/url"
 
 // Baggage is a list of baggage members representing the baggage-string as
 // defined by the W3C Baggage specification.
@@ -414,36 +251,11 @@ type Baggage struct { //nolint:golint
 // Baggage exceeding limits set in that specification.
 //
 // It expects all the provided members to have already been validated.
-func New(members ...Member) (Baggage, error) {
-	if len(members) == 0 {
-		return Baggage{}, nil
-	}
+func New(members ...Member) (Baggage, error) { _ = "STUB: not implemented"; return *new(Baggage), nil }
 
-	b := make(baggage.List)
-	for _, m := range members {
-		if !m.hasData {
-			return Baggage{}, errInvalidMember
-		}
+// OpenTelemetry resolves duplicates by last-one-wins.
 
-		// OpenTelemetry resolves duplicates by last-one-wins.
-		b[m.key] = baggage.Item{
-			Value:      m.value,
-			Properties: m.properties.asInternal(),
-		}
-	}
-
-	// Check member numbers after deduplication.
-	if len(b) > maxMembers {
-		return Baggage{}, errMemberNumber
-	}
-
-	bag := Baggage{b}
-	if n := len(bag.String()); n > maxBytesPerBaggageString {
-		return Baggage{}, fmt.Errorf("%w: %d", errBaggageBytes, n)
-	}
-
-	return bag, nil
-}
+// Check member numbers after deduplication.
 
 // Parse attempts to decode a baggage-string from the passed string. It
 // returns an error if the input is invalid according to the W3C Baggage
@@ -453,37 +265,13 @@ func New(members ...Member) (Baggage, error) {
 // defined (reading left-to-right) will be the only one kept. This diverges
 // from the W3C Baggage specification which allows duplicate list-members, but
 // conforms to the OpenTelemetry Baggage specification.
-func Parse(bStr string) (Baggage, error) {
-	if bStr == "" {
-		return Baggage{}, nil
-	}
+func Parse(bStr string) (Baggage, error) { _ = "STUB: not implemented"; return *new(Baggage), nil }
 
-	if n := len(bStr); n > maxBytesPerBaggageString {
-		return Baggage{}, fmt.Errorf("%w: %d", errBaggageBytes, n)
-	}
+// OpenTelemetry resolves duplicates by last-one-wins.
 
-	b := make(baggage.List)
-	for _, memberStr := range strings.Split(bStr, listDelimiter) {
-		m, err := parseMember(memberStr)
-		if err != nil {
-			return Baggage{}, err
-		}
-		// OpenTelemetry resolves duplicates by last-one-wins.
-		b[m.key] = baggage.Item{
-			Value:      m.value,
-			Properties: m.properties.asInternal(),
-		}
-	}
-
-	// OpenTelemetry does not allow for duplicate list-members, but the W3C
-	// specification does. Now that we have deduplicated, ensure the baggage
-	// does not exceed list-member limits.
-	if len(b) > maxMembers {
-		return Baggage{}, errMemberNumber
-	}
-
-	return Baggage{b}, nil
-}
+// OpenTelemetry does not allow for duplicate list-members, but the W3C
+// specification does. Now that we have deduplicated, ensure the baggage
+// does not exceed list-member limits.
 
 // Member returns the baggage list-member identified by key.
 //
@@ -491,45 +279,19 @@ func Parse(bStr string) (Baggage, error) {
 // be a zero-value Member.
 // The returned member is not validated, as we assume the validation happened
 // when it was added to the Baggage.
-func (b Baggage) Member(key string) Member {
-	v, ok := b.list[key]
-	if !ok {
-		// We do not need to worry about distinguishing between the situation
-		// where a zero-valued Member is included in the Baggage because a
-		// zero-valued Member is invalid according to the W3C Baggage
-		// specification (it has an empty key).
-		return newInvalidMember()
-	}
+func (b Baggage) Member(key string) Member { _ = "STUB: not implemented"; return *new(Member) }
 
-	return Member{
-		key:        key,
-		value:      v.Value,
-		properties: fromInternalProperties(v.Properties),
-		hasData:    true,
-	}
-}
+// We do not need to worry about distinguishing between the situation
+// where a zero-valued Member is included in the Baggage because a
+// zero-valued Member is invalid according to the W3C Baggage
+// specification (it has an empty key).
 
 // Members returns all the baggage list-members.
 // The order of the returned list-members does not have significance.
 //
 // The returned members are not validated, as we assume the validation happened
 // when they were added to the Baggage.
-func (b Baggage) Members() []Member {
-	if len(b.list) == 0 {
-		return nil
-	}
-
-	members := make([]Member, 0, len(b.list))
-	for k, v := range b.list {
-		members = append(members, Member{
-			key:        k,
-			value:      v.Value,
-			properties: fromInternalProperties(v.Properties),
-			hasData:    true,
-		})
-	}
-	return members
-}
+func (b Baggage) Members() []Member { _ = "STUB: not implemented"; return nil }
 
 // SetMember returns a copy the Baggage with the member included. If the
 // baggage contains a Member with the same key the existing Member is
@@ -538,67 +300,24 @@ func (b Baggage) Members() []Member {
 // If member is invalid according to the W3C Baggage specification, an error
 // is returned with the original Baggage.
 func (b Baggage) SetMember(member Member) (Baggage, error) {
-	if !member.hasData {
-		return b, errInvalidMember
-	}
-
-	n := len(b.list)
-	if _, ok := b.list[member.key]; !ok {
-		n++
-	}
-	list := make(baggage.List, n)
-
-	for k, v := range b.list {
-		// Do not copy if we are just going to overwrite.
-		if k == member.key {
-			continue
-		}
-		list[k] = v
-	}
-
-	list[member.key] = baggage.Item{
-		Value:      member.value,
-		Properties: member.properties.asInternal(),
-	}
-
-	return Baggage{list: list}, nil
+	_ = "STUB: not implemented"
+	return *new(Baggage), nil
 }
+
+// Do not copy if we are just going to overwrite.
 
 // DeleteMember returns a copy of the Baggage with the list-member identified
 // by key removed.
-func (b Baggage) DeleteMember(key string) Baggage {
-	n := len(b.list)
-	if _, ok := b.list[key]; ok {
-		n--
-	}
-	list := make(baggage.List, n)
-
-	for k, v := range b.list {
-		if k == key {
-			continue
-		}
-		list[k] = v
-	}
-
-	return Baggage{list: list}
-}
+func (b Baggage) DeleteMember(key string) Baggage { _ = "STUB: not implemented"; return *new(Baggage) }
 
 // Len returns the number of list-members in the Baggage.
 func (b Baggage) Len() int {
-	return len(b.list)
+	_ = "STUB: not implemented"
+
+	// String encodes Baggage into a string compliant with the W3C Baggage
+	// specification. The returned string will be invalid if the Baggage contains
+	// any invalid list-members.
+	return 0
 }
 
-// String encodes Baggage into a string compliant with the W3C Baggage
-// specification. The returned string will be invalid if the Baggage contains
-// any invalid list-members.
-func (b Baggage) String() string {
-	members := make([]string, 0, len(b.list))
-	for k, v := range b.list {
-		members = append(members, Member{
-			key:        k,
-			value:      v.Value,
-			properties: fromInternalProperties(v.Properties),
-		}.String())
-	}
-	return strings.Join(members, listDelimiter)
-}
+func (b Baggage) String() string { _ = "STUB: not implemented"; return "" }

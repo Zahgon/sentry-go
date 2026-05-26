@@ -30,16 +30,15 @@ type crontabSchedule struct {
 }
 
 func (c crontabSchedule) scheduleType() checkInScheduleType {
-	return checkInScheduleTypeCrontab
+	_ = "STUB: not implemented"
+	return *new(checkInScheduleType)
 }
 
 // CrontabSchedule defines the MonitorSchedule with a cron format.
 // Example: "8 * * * *".
 func CrontabSchedule(scheduleString string) MonitorSchedule {
-	return crontabSchedule{
-		Type:  string(checkInScheduleTypeCrontab),
-		Value: scheduleString,
-	}
+	_ = "STUB: not implemented"
+	return *new(MonitorSchedule)
 }
 
 type intervalSchedule struct {
@@ -49,7 +48,8 @@ type intervalSchedule struct {
 }
 
 func (i intervalSchedule) scheduleType() checkInScheduleType {
-	return checkInScheduleTypeInterval
+	_ = "STUB: not implemented"
+	return *new(checkInScheduleType)
 }
 
 type MonitorScheduleUnit string
@@ -69,11 +69,8 @@ const (
 //
 //	IntervalSchedule(1, sentry.MonitorScheduleUnitDay)
 func IntervalSchedule(value int64, unit MonitorScheduleUnit) MonitorSchedule {
-	return intervalSchedule{
-		Type:  string(checkInScheduleTypeInterval),
-		Value: value,
-		Unit:  string(unit),
-	}
+	_ = "STUB: not implemented"
+	return *new(MonitorSchedule)
 }
 
 type MonitorConfig struct { //nolint: maligned // prefer readability over optimal memory layout

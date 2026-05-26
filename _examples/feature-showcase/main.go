@@ -1,117 +1,52 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 )
 
-func prettyPrint(v interface{}) string {
-	pp, _ := json.MarshalIndent(v, "", "  ")
-	return string(pp)
-}
+func prettyPrint(v interface{}) string { _ = "STUB: not implemented"; return "" }
 
 type devNullTransport struct{}
 
 func (t *devNullTransport) Configure(options sentry.ClientOptions) {
-	dsn, _ := sentry.NewDsn(options.Dsn)
-	fmt.Println()
-	fmt.Println("Store Endpoint:", dsn.StoreAPIURL())
-	fmt.Println("Headers:", dsn.RequestHeaders())
-	fmt.Println()
+	_ = "STUB: not implemented"
+	return
 }
-func (t *devNullTransport) SendEvent(event *sentry.Event) {
-	fmt.Println("Faked Transport")
-}
+
+func (t *devNullTransport) SendEvent(event *sentry.Event) { _ = "STUB: not implemented"; return }
 
 func (t *devNullTransport) Flush(timeout time.Duration) bool {
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
-func recoverHandler() {
-	defer sentry.Recover()
-	panic("ups")
-}
+func recoverHandler() { _ = "STUB: not implemented"; return }
 
-func beforeSend() {
-	sentry.CaptureMessage("Drop me!")
-}
+func beforeSend() { _ = "STUB: not implemented"; return }
 
-func captureMessage() {
-	sentry.CaptureMessage("say what again. SAY WHAT again")
-}
+func captureMessage() { _ = "STUB: not implemented"; return }
 
-func configureScope() {
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("oristhis", "justfantasy")
-		scope.SetTag("isthis", "reallife")
-		scope.SetLevel(sentry.LevelFatal)
-		scope.SetUser(sentry.User{
-			ID: "1337",
-		})
-	})
-}
+func configureScope() { _ = "STUB: not implemented"; return }
 
-func withScope() {
-	sentry.WithScope(func(scope *sentry.Scope) {
-		scope.SetLevel(sentry.LevelFatal)
-		sentry.CaptureException(errors.New("say what again. SAY WHAT again"))
-	})
-}
+func withScope() { _ = "STUB: not implemented"; return }
 
-func addBreadcrumbs() {
-	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Message: "Random breadcrumb 1",
-	})
+func addBreadcrumbs() { _ = "STUB: not implemented"; return }
 
-	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Message: "Random breadcrumb 2",
-	})
-
-	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Message: "Random breadcrumb 3",
-	})
-}
-
-func withScopeAndConfigureScope() {
-	sentry.WithScope(func(scope *sentry.Scope) {
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetTags(map[string]string{
-				"istillcant": "42",
-				"believe":    "that",
-			})
-			scope.SetTags(map[string]string{
-				"italready": "works",
-				"just":      "likethat",
-			})
-		})
-
-		event := sentry.NewEvent()
-		event.Message = "say what again. SAY WHAT again"
-		sentry.CaptureEvent(event)
-	})
-}
+func withScopeAndConfigureScope() { _ = "STUB: not implemented"; return }
 
 type CustomComplexError struct {
 	Message      string
 	AnswerToLife int
 }
 
-func (e CustomComplexError) Error() string {
-	return "CustomComplexError: " + e.Message
-}
+func (e CustomComplexError) Error() string { _ = "STUB: not implemented"; return "" }
 
-func (e CustomComplexError) GimmeMoreData() string {
-	return strconv.Itoa(e.AnswerToLife)
-}
+func (e CustomComplexError) GimmeMoreData() string { _ = "STUB: not implemented"; return "" }
 
-func eventHint() {
-	sentry.CaptureException(CustomComplexError{Message: "Captured", AnswerToLife: 42})
-}
+func eventHint() { _ = "STUB: not implemented"; return }
 
 func main() {
 	if err := sentry.Init(sentry.ClientOptions{

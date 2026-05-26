@@ -2,11 +2,8 @@ package sentry
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
-
-	"github.com/getsentry/sentry-go/internal/debuglog"
 )
 
 type contextKey int
@@ -48,111 +45,52 @@ type layer struct {
 }
 
 // Client returns the layer's client. Safe for concurrent use.
-func (l *layer) Client() *Client {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-	return l.client
-}
+func (l *layer) Client() *Client { _ = "STUB: not implemented"; return nil }
 
 // SetClient sets the layer's client. Safe for concurrent use.
-func (l *layer) SetClient(c *Client) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.client = c
-}
+func (l *layer) SetClient(c *Client) { _ = "STUB: not implemented"; return }
 
 type stack []*layer
 
 // NewHub returns an instance of a Hub with provided Client and Scope bound.
-func NewHub(client *Client, scope *Scope) *Hub {
-	hub := Hub{
-		stack: &stack{{
-			client: client,
-			scope:  scope,
-		}},
-	}
-	return &hub
-}
+func NewHub(client *Client, scope *Scope) *Hub { _ = "STUB: not implemented"; return nil }
 
 // CurrentHub returns an instance of previously initialized Hub stored in the global namespace.
 func CurrentHub() *Hub {
-	return currentHub
+	_ = "STUB: not implemented"
+
+	// LastEventID returns the ID of the last event (error or message) captured
+	// through the hub and sent to the underlying transport.
+	//
+	// Transactions and events dropped by sampling or event processors do not change
+	// the last event ID.
+	//
+	// LastEventID is a convenience method to cover use cases in which errors are
+	// captured indirectly and the ID is needed. For example, it can be used as part
+	// of an HTTP middleware to log the ID of the last error, if any.
+	//
+	// For more flexibility, consider instead using the ClientOptions.BeforeSend
+	// function or event processors.
+	return nil
 }
 
-// LastEventID returns the ID of the last event (error or message) captured
-// through the hub and sent to the underlying transport.
-//
-// Transactions and events dropped by sampling or event processors do not change
-// the last event ID.
-//
-// LastEventID is a convenience method to cover use cases in which errors are
-// captured indirectly and the ID is needed. For example, it can be used as part
-// of an HTTP middleware to log the ID of the last error, if any.
-//
-// For more flexibility, consider instead using the ClientOptions.BeforeSend
-// function or event processors.
-func (hub *Hub) LastEventID() EventID {
-	hub.mu.RLock()
-	defer hub.mu.RUnlock()
-
-	return hub.lastEventID
-}
+func (hub *Hub) LastEventID() EventID { _ = "STUB: not implemented"; return *new(EventID) }
 
 // stackTop returns the top layer of the hub stack. Valid hubs always have at
 // least one layer, therefore stackTop always return a non-nil pointer.
-func (hub *Hub) stackTop() *layer {
-	hub.mu.RLock()
-	defer hub.mu.RUnlock()
-
-	stack := hub.stack
-	stackLen := len(*stack)
-	top := (*stack)[stackLen-1]
-	return top
-}
+func (hub *Hub) stackTop() *layer { _ = "STUB: not implemented"; return nil }
 
 // Clone returns a copy of the current Hub with top-most scope and client copied over.
-func (hub *Hub) Clone() *Hub {
-	top := hub.stackTop()
-	scope := top.scope
-	if scope != nil {
-		scope = scope.Clone()
-	}
-	return NewHub(top.Client(), scope)
-}
+func (hub *Hub) Clone() *Hub { _ = "STUB: not implemented"; return nil }
 
 // Scope returns top-level Scope of the current Hub or nil if no Scope is bound.
-func (hub *Hub) Scope() *Scope {
-	top := hub.stackTop()
-	return top.scope
-}
+func (hub *Hub) Scope() *Scope { _ = "STUB: not implemented"; return nil }
 
 // Client returns top-level Client of the current Hub or nil if no Client is bound.
-func (hub *Hub) Client() *Client {
-	top := hub.stackTop()
-	return top.Client()
-}
+func (hub *Hub) Client() *Client { _ = "STUB: not implemented"; return nil }
 
 // PushScope pushes a new scope for the current Hub and reuses previously bound Client.
-func (hub *Hub) PushScope() *Scope {
-	top := hub.stackTop()
-
-	var scope *Scope
-	if top.scope != nil {
-		scope = top.scope.Clone()
-	} else {
-		scope = NewScope()
-	}
-
-	hub.mu.Lock()
-	defer hub.mu.Unlock()
-
-	*hub.stack = append(*hub.stack, &layer{
-		client: top.Client(),
-		scope:  scope,
-	})
-
-	return scope
-}
+func (hub *Hub) PushScope() *Scope { _ = "STUB: not implemented"; return nil }
 
 // PopScope drops the most recent scope.
 //
@@ -161,24 +99,13 @@ func (hub *Hub) PushScope() *Scope {
 //
 // Calls to PopScope that do not match previous calls to PushScope are silently
 // ignored.
-func (hub *Hub) PopScope() {
-	hub.mu.Lock()
-	defer hub.mu.Unlock()
+func (hub *Hub) PopScope() { _ = "STUB: not implemented"; return }
 
-	stack := *hub.stack
-	stackLen := len(stack)
-	if stackLen > 1 {
-		// Never pop the last item off the stack, the stack should always have
-		// at least one item.
-		*hub.stack = stack[0 : stackLen-1]
-	}
-}
+// Never pop the last item off the stack, the stack should always have
+// at least one item.
 
 // BindClient binds a new Client for the current Hub.
-func (hub *Hub) BindClient(client *Client) {
-	top := hub.stackTop()
-	top.SetClient(client)
-}
+func (hub *Hub) BindClient(client *Client) { _ = "STUB: not implemented"; return }
 
 // WithScope runs f in an isolated temporary scope.
 //
@@ -189,11 +116,7 @@ func (hub *Hub) BindClient(client *Client) {
 // freely modified without affecting the current scope.
 //
 // It is a shorthand for PushScope followed by PopScope.
-func (hub *Hub) WithScope(f func(scope *Scope)) {
-	scope := hub.PushScope()
-	defer hub.PopScope()
-	f(scope)
-}
+func (hub *Hub) WithScope(f func(scope *Scope)) { _ = "STUB: not implemented"; return }
 
 // ConfigureScope runs f in the current scope.
 //
@@ -203,80 +126,35 @@ func (hub *Hub) WithScope(f func(scope *Scope)) {
 // Modifying the scope affects all references to the current scope.
 //
 // See also WithScope for making isolated temporary changes.
-func (hub *Hub) ConfigureScope(f func(scope *Scope)) {
-	scope := hub.Scope()
-	f(scope)
-}
+func (hub *Hub) ConfigureScope(f func(scope *Scope)) { _ = "STUB: not implemented"; return }
 
 // CaptureEvent calls the method of a same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
-func (hub *Hub) CaptureEvent(event *Event) *EventID {
-	return hub.CaptureEventWithHint(event, nil)
-}
+func (hub *Hub) CaptureEvent(event *Event) *EventID { _ = "STUB: not implemented"; return nil }
 
 // CaptureEventWithHint is like CaptureEvent but additionally accepts an EventHint.
 func (hub *Hub) CaptureEventWithHint(event *Event, hint *EventHint) *EventID {
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil || scope == nil {
-		return nil
-	}
-	eventID := client.CaptureEvent(event, hint, scope)
-
-	if event.Type != transactionType && eventID != nil {
-		hub.mu.Lock()
-		hub.lastEventID = *eventID
-		hub.mu.Unlock()
-	}
-	return eventID
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // CaptureMessage calls the method of a same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
-func (hub *Hub) CaptureMessage(message string) *EventID {
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil || scope == nil {
-		return nil
-	}
-	eventID := client.CaptureMessage(message, nil, scope)
-
-	if eventID != nil {
-		hub.mu.Lock()
-		hub.lastEventID = *eventID
-		hub.mu.Unlock()
-	}
-	return eventID
-}
+func (hub *Hub) CaptureMessage(message string) *EventID { _ = "STUB: not implemented"; return nil }
 
 // CaptureException calls the method of a same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
-func (hub *Hub) CaptureException(exception error) *EventID {
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil || scope == nil {
-		return nil
-	}
-	eventID := client.CaptureException(exception, &EventHint{OriginalException: exception}, scope)
-
-	if eventID != nil {
-		hub.mu.Lock()
-		hub.lastEventID = *eventID
-		hub.mu.Unlock()
-	}
-	return eventID
-}
+func (hub *Hub) CaptureException(exception error) *EventID { _ = "STUB: not implemented"; return nil }
 
 // CaptureCheckIn calls the method of the same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns CheckInID if the check-in was captured successfully, or nil otherwise.
 func (hub *Hub) CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig) *EventID {
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil {
-		return nil
-	}
-
-	return client.CaptureCheckIn(checkIn, monitorConfig, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // AddBreadcrumb records a new breadcrumb.
@@ -284,61 +162,23 @@ func (hub *Hub) CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig) *
 // The total number of breadcrumbs that can be recorded are limited by the
 // configuration on the client.
 func (hub *Hub) AddBreadcrumb(breadcrumb *Breadcrumb, hint *BreadcrumbHint) {
-	client := hub.Client()
+	_ = "STUB: not implemented"
+	return
 
 	// If there's no client, just store it on the scope straight away
-	if client == nil {
-		hub.Scope().AddBreadcrumb(breadcrumb, defaultMaxBreadcrumbs)
-		return
-	}
-
-	limit := client.options.MaxBreadcrumbs
-	switch {
-	case limit < 0:
-		return
-	case limit == 0:
-		limit = defaultMaxBreadcrumbs
-	}
-
-	if client.options.BeforeBreadcrumb != nil {
-		if hint == nil {
-			hint = &BreadcrumbHint{}
-		}
-		if breadcrumb = client.options.BeforeBreadcrumb(breadcrumb, hint); breadcrumb == nil {
-			debuglog.Println("breadcrumb dropped due to BeforeBreadcrumb callback.")
-			return
-		}
-	}
-
-	hub.Scope().AddBreadcrumb(breadcrumb, limit)
 }
 
 // Recover calls the method of a same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
-func (hub *Hub) Recover(err interface{}) *EventID {
-	if err == nil {
-		err = recover()
-	}
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil || scope == nil {
-		return nil
-	}
-	return client.Recover(err, &EventHint{RecoveredException: err}, scope)
-}
+func (hub *Hub) Recover(err interface{}) *EventID { _ = "STUB: not implemented"; return nil }
 
 // RecoverWithContext calls the method of a same name on currently bound Client instance
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
 func (hub *Hub) RecoverWithContext(ctx context.Context, err interface{}) *EventID {
-	if err == nil {
-		err = recover()
-	}
-	client, scope := hub.Client(), hub.Scope()
-	if client == nil || scope == nil {
-		return nil
-	}
-	return client.RecoverWithContext(ctx, err, &EventHint{RecoveredException: err}, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Flush waits until the underlying Transport sends any buffered events to the
@@ -352,15 +192,7 @@ func (hub *Hub) RecoverWithContext(ctx context.Context, err interface{}) *EventI
 // CaptureException or CaptureMessage. Instead, to have the SDK send events over
 // the network synchronously, configure it to use the HTTPSyncTransport in the
 // call to Init.
-func (hub *Hub) Flush(timeout time.Duration) bool {
-	client := hub.Client()
-
-	if client == nil {
-		return false
-	}
-
-	return client.Flush(timeout)
-}
+func (hub *Hub) Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 // FlushWithContext waits until the underlying Transport sends any buffered events
 // to the Sentry server, blocking for at most the duration specified by the context.
@@ -374,77 +206,37 @@ func (hub *Hub) Flush(timeout time.Duration) bool {
 // CaptureException, or CaptureMessage. To send events synchronously over the network,
 // configure the SDK to use HTTPSyncTransport during initialization with Init.
 
-func (hub *Hub) FlushWithContext(ctx context.Context) bool {
-	client := hub.Client()
-
-	if client == nil {
-		return false
-	}
-
-	return client.FlushWithContext(ctx)
-}
+func (hub *Hub) FlushWithContext(ctx context.Context) bool { _ = "STUB: not implemented"; return false }
 
 // GetTraceparent returns the current Sentry traceparent string, to be used as a HTTP header value
 // or HTML meta tag value.
 // This function is context aware, as in it either returns the traceparent based
 // on the current span, or the scope's propagation context.
-func (hub *Hub) GetTraceparent() string {
-	scope := hub.Scope()
-	if span := scope.GetSpan(); span != nil {
-		return span.ToSentryTrace()
-	}
-	propagationContext := scope.propagationContextSnapshot()
-	return fmt.Sprintf("%s-%s", propagationContext.TraceID, propagationContext.SpanID)
-}
+func (hub *Hub) GetTraceparent() string { _ = "STUB: not implemented"; return "" }
 
 // GetTraceparentW3C returns the current traceparent string in W3C format.
 // This is intended for propagation to downstream services that expect the W3C header.
-func (hub *Hub) GetTraceparentW3C() string {
-	scope := hub.Scope()
-	if span := scope.GetSpan(); span != nil {
-		return span.ToTraceparent()
-	}
-	propagationContext := scope.propagationContextSnapshot()
-	return fmt.Sprintf("00-%s-%s-00", propagationContext.TraceID, propagationContext.SpanID)
-}
+func (hub *Hub) GetTraceparentW3C() string { _ = "STUB: not implemented"; return "" }
 
 // GetBaggage returns the current Sentry baggage string, to be used as a HTTP header value
 // or HTML meta tag value.
 // This function is context aware, as in it either returns the baggage based
 // on the current span or the scope's propagation context.
-func (hub *Hub) GetBaggage() string {
-	scope := hub.Scope()
-	if span := scope.GetSpan(); span != nil {
-		return span.ToBaggage()
-	}
-	return scope.propagationContextSnapshot().DynamicSamplingContext.String()
-}
+func (hub *Hub) GetBaggage() string { _ = "STUB: not implemented"; return "" }
 
 // HasHubOnContext checks whether Hub instance is bound to a given Context struct.
-func HasHubOnContext(ctx context.Context) bool {
-	_, ok := ctx.Value(HubContextKey).(*Hub)
-	return ok
-}
+func HasHubOnContext(ctx context.Context) bool { _ = "STUB: not implemented"; return false }
 
 // GetHubFromContext tries to retrieve Hub instance from the given Context struct
 // or return nil if one is not found.
-func GetHubFromContext(ctx context.Context) *Hub {
-	if hub, ok := ctx.Value(HubContextKey).(*Hub); ok {
-		return hub
-	}
-	return nil
-}
+func GetHubFromContext(ctx context.Context) *Hub { _ = "STUB: not implemented"; return nil }
 
 // hubFromContext returns either a hub stored in the context or the current hub.
 // The return value is guaranteed to be non-nil, unlike GetHubFromContext.
-func hubFromContext(ctx context.Context) *Hub {
-	if hub, ok := ctx.Value(HubContextKey).(*Hub); ok {
-		return hub
-	}
-	return currentHub
-}
+func hubFromContext(ctx context.Context) *Hub { _ = "STUB: not implemented"; return nil }
 
 // SetHubOnContext stores given Hub instance on the Context struct and returns a new Context.
 func SetHubOnContext(ctx context.Context, hub *Hub) context.Context {
-	return context.WithValue(ctx, HubContextKey, hub)
+	_ = "STUB: not implemented"
+	return *new(context.Context)
 }

@@ -3,13 +3,10 @@
 package sentryhttp
 
 import (
-	"context"
 	"net/http"
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/internal/httputils"
-	"github.com/getsentry/sentry-go/internal/traceutils"
 )
 
 // The identifier of the HTTP SDK.
@@ -52,90 +49,36 @@ type Options struct {
 
 // New returns a new Handler. Use the Handle and HandleFunc methods to wrap
 // existing HTTP handlers.
-func New(options Options) *Handler {
-	if options.Timeout == 0 {
-		options.Timeout = sentry.DefaultFlushTimeout
-	}
-
-	return &Handler{
-		repanic:         options.Repanic,
-		timeout:         options.Timeout,
-		waitForDelivery: options.WaitForDelivery,
-	}
-}
+func New(options Options) *Handler { _ = "STUB: not implemented"; return nil }
 
 // Handle works as a middleware that wraps an existing http.Handler. A wrapped
 // handler will recover from and report panics to Sentry, and provide access to
 // a request-specific hub to report messages and errors.
 func (h *Handler) Handle(handler http.Handler) http.Handler {
-	return h.handle(handler)
+	_ = "STUB: not implemented"
+	return *
+
+	// HandleFunc is like Handle, but with a handler function parameter for cases
+	// where that is convenient. In particular, use it to wrap a handler function
+	// literal.
+	//
+	//	http.Handle(pattern, h.HandleFunc(func (w http.ResponseWriter, r *http.Request) {
+	//	    // handler code here
+	//	}))
+	new(http.Handler)
 }
 
-// HandleFunc is like Handle, but with a handler function parameter for cases
-// where that is convenient. In particular, use it to wrap a handler function
-// literal.
-//
-//	http.Handle(pattern, h.HandleFunc(func (w http.ResponseWriter, r *http.Request) {
-//	    // handler code here
-//	}))
 func (h *Handler) HandleFunc(handler http.HandlerFunc) http.HandlerFunc {
-	return h.handle(handler)
+	_ = "STUB: not implemented"
+	return *new(http.HandlerFunc)
 }
 
 func (h *Handler) handle(handler http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		hub := sentry.GetHubFromContext(r.Context())
-		if hub == nil {
-			hub = sentry.CurrentHub().Clone()
-			ctx = sentry.SetHubOnContext(ctx, hub)
-		}
-
-		if client := hub.Client(); client != nil {
-			client.SetSDKIdentifier(sdkIdentifier)
-		}
-
-		options := []sentry.SpanOption{
-			sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader)),
-			sentry.WithOpName("http.server"),
-			sentry.WithTransactionSource(sentry.SourceURL),
-			sentry.WithSpanOrigin(sentry.SpanOriginStdLib),
-		}
-
-		transaction := sentry.StartTransaction(ctx,
-			traceutils.GetHTTPSpanName(r),
-			options...,
-		)
-		transaction.SetData("http.request.method", r.Method)
-
-		rw := httputils.NewWrapResponseWriter(w, r.ProtoMajor)
-
-		defer func() {
-			status := rw.Status()
-			transaction.Status = sentry.HTTPtoSpanStatus(status)
-			transaction.SetData("http.response.status_code", status)
-			transaction.Finish()
-		}()
-
-		hub.Scope().SetRequest(r)
-		r = r.WithContext(transaction.Context())
-		defer h.recoverWithSentry(hub, r)
-
-		handler.ServeHTTP(rw, r)
-	}
+	_ = "STUB: not implemented"
+	return *new(http.HandlerFunc)
 }
 
 func (h *Handler) recoverWithSentry(hub *sentry.Hub, r *http.Request) {
-	if err := recover(); err != nil {
-		eventID := hub.RecoverWithContext(
-			context.WithValue(r.Context(), sentry.RequestContextKey, r),
-			err,
-		)
-		if eventID != nil && h.waitForDelivery {
-			hub.Flush(h.timeout)
-		}
-		if h.repanic {
-			panic(err)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }

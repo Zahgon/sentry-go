@@ -1,14 +1,9 @@
 package sentryslog
 
 import (
-	"encoding"
-	"fmt"
 	"log/slog"
-	"net/http"
-	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 )
 
 const maxErrorDepth = 100
@@ -31,123 +26,22 @@ type Converter func(addSource bool, replaceAttr func(groups []string, a slog.Att
 // Errors should only be captured using sentry.CaptureException instead of being converted
 // from log entries. Will be removed in 0.48.0.
 func DefaultConverter(addSource bool, replaceAttr func(groups []string, a slog.Attr) slog.Attr, loggerAttr []slog.Attr, groups []string, record *slog.Record, hub *sentry.Hub) *sentry.Event {
+	_ = "STUB: not implemented"
 	// aggregate all attributes
-	attrs := appendRecordAttrsToAttrs(loggerAttr, groups, record)
-
-	// developer formatters
-	if addSource {
-		attrs = append(attrs, source(sourceKey, record))
-	}
-	attrs = replaceAttrs(replaceAttr, []string{}, attrs...)
-	attrs = removeEmptyAttrs(attrs)
-	attrs, err := extractError(attrs)
-
-	// handler formatter
-	event := sentry.NewEvent()
-	event.Timestamp = record.Time.UTC()
-	event.Level = LogLevels[record.Level]
-	event.Message = record.Message
-	event.Logger = name
-
-	errorDepth := maxErrorDepth
-	if hub != nil {
-		if client := hub.Client(); client != nil {
-			errorDepth = client.Options().MaxErrorDepth
-		}
-	}
-	event.SetException(err, errorDepth)
-
-	for i := range attrs {
-		attrToSentryEvent(attrs[i], event)
-	}
-
-	return event
+	return nil
 }
 
-func attrToSentryEvent(attr slog.Attr, event *sentry.Event) {
-	k := attr.Key
-	v := attr.Value
-	kind := v.Kind()
+// developer formatters
 
-	switch {
-	case k == "dist" && kind == slog.KindString:
-		event.Dist = v.String()
-	case k == "environment" && kind == slog.KindString:
-		event.Environment = v.String()
-	case k == "event_id" && kind == slog.KindString:
-		event.EventID = sentry.EventID(v.String())
-	case k == "platform" && kind == slog.KindString:
-		event.Platform = v.String()
-	case k == "release" && kind == slog.KindString:
-		event.Release = v.String()
-	case k == "server_name" && kind == slog.KindString:
-		event.ServerName = v.String()
-	case k == "tags" && kind == slog.KindGroup:
-		for tk, tv := range attrsToString(v.Group()...) {
-			event.Tags[tk] = tv
-		}
-	case k == "transaction" && kind == slog.KindString:
-		event.Transaction = v.String()
-	case k == "user" && kind == slog.KindGroup:
-		handleUserAttributes(v, event)
-	case k == "request" && kind == slog.KindAny:
-		handleRequestAttributes(v, event)
-	case k == "fingerprint" && kind == slog.KindAny:
-		handleFingerprint(v, event)
-	case kind == slog.KindGroup:
-		event.Tags[k] = fmt.Sprint(attrsToMap(v.Group()...))
-	default:
-		event.Tags[k] = fmt.Sprint(v.Any())
-	}
-}
+// handler formatter
 
-func handleUserAttributes(v slog.Value, event *sentry.Event) {
-	data := attrsToString(v.Group()...)
-	if id, ok := data["id"]; ok {
-		event.User.ID = id
-		delete(data, "id")
-	}
-	if email, ok := data["email"]; ok {
-		event.User.Email = email
-		delete(data, "email")
-	}
-	if ipAddress, ok := data["ip_address"]; ok {
-		event.User.IPAddress = ipAddress
-		delete(data, "ip_address")
-	}
-	if username, ok := data["username"]; ok {
-		event.User.Username = username
-		delete(data, "username")
-	}
-	if name, ok := data["name"]; ok {
-		event.User.Name = name
-		delete(data, "name")
-	}
-	event.User.Data = data
-}
+func attrToSentryEvent(attr slog.Attr, event *sentry.Event) { _ = "STUB: not implemented"; return }
 
-func handleRequestAttributes(v slog.Value, event *sentry.Event) {
-	if req, ok := v.Any().(http.Request); ok {
-		event.Request = sentry.NewRequest(&req)
-	} else if req, ok := v.Any().(*http.Request); ok {
-		event.Request = sentry.NewRequest(req)
-	} else {
-		if tm, ok := v.Any().(encoding.TextMarshaler); ok {
-			data, err := tm.MarshalText()
-			if err == nil {
-				event.User.Data["request"] = string(data)
-			} else {
-				event.User.Data["request"] = fmt.Sprintf("%v", v.Any())
-			}
-		}
-	}
-}
+func handleUserAttributes(v slog.Value, event *sentry.Event) { _ = "STUB: not implemented"; return }
 
-func handleFingerprint(v slog.Value, event *sentry.Event) {
-	if fingerprint, ok := v.Any().([]string); ok {
-		event.Fingerprint = fingerprint
-	}
-}
+func handleRequestAttributes(v slog.Value, event *sentry.Event) { _ = "STUB: not implemented"; return }
+
+func handleFingerprint(v slog.Value, event *sentry.Event) { _ = "STUB: not implemented"; return }
 
 // uint64LogEntry is used to pass uint64 values without conversion.
 // The concrete sentry.logEntry type satisfies this interface,
@@ -157,42 +51,8 @@ type uint64LogEntry interface {
 }
 
 func slogAttrToLogEntry(logEntry sentry.LogEntry, group string, a slog.Attr) sentry.LogEntry {
-	key := group + a.Key
-	switch a.Value.Kind() {
-	case slog.KindAny:
-		return logEntry.String(key, fmt.Sprintf("%+v", a.Value.Any()))
-	case slog.KindBool:
-		return logEntry.Bool(key, a.Value.Bool())
-	case slog.KindDuration:
-		return logEntry.String(key, a.Value.Duration().String())
-	case slog.KindFloat64:
-		return logEntry.Float64(key, a.Value.Float64())
-	case slog.KindInt64:
-		return logEntry.Int64(key, a.Value.Int64())
-	case slog.KindString:
-		return logEntry.String(key, a.Value.String())
-	case slog.KindTime:
-		return logEntry.String(key, a.Value.Time().Format(time.RFC3339))
-	case slog.KindUint64:
-		if e, ok := logEntry.(uint64LogEntry); ok {
-			return e.Uint64(key, a.Value.Uint64())
-		}
-		debuglog.Println("Internal error: log entry does not implement unsigned int conversion")
-		return logEntry
-	case slog.KindLogValuer:
-		return logEntry.String(key, a.Value.LogValuer().LogValue().String())
-	case slog.KindGroup:
-		// Handle nested group attributes
-		groupPrefix := key
-		if groupPrefix != "" {
-			groupPrefix += "."
-		}
-		for _, subAttr := range a.Value.Group() {
-			logEntry = slogAttrToLogEntry(logEntry, groupPrefix, subAttr)
-		}
-		return logEntry
-	}
-
-	debuglog.Printf("Invalid type: dropping attribute with key: %v and value: %v", a.Key, a.Value)
-	return logEntry
+	_ = "STUB: not implemented"
+	return *new(sentry.LogEntry)
 }
+
+// Handle nested group attributes

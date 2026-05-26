@@ -4,15 +4,10 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"maps"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/getsentry/sentry-go/attribute"
-	"github.com/getsentry/sentry-go/internal/debuglog"
-	"github.com/getsentry/sentry-go/internal/ratelimit"
-	"github.com/getsentry/sentry-go/report"
 )
 
 // Scope holds contextual data for the current scope.
@@ -56,114 +51,40 @@ type Scope struct {
 }
 
 // NewScope creates a new Scope.
-func NewScope() *Scope {
-	return &Scope{
-		attributes:         make(map[string]attribute.Value),
-		breadcrumbs:        make([]*Breadcrumb, 0),
-		attachments:        make([]*Attachment, 0),
-		tags:               make(map[string]string),
-		contexts:           make(map[string]Context),
-		fingerprint:        make([]string, 0),
-		propagationContext: NewPropagationContext(),
-	}
-}
+func NewScope() *Scope { _ = "STUB: not implemented"; return nil }
 
 // AddBreadcrumb adds new breadcrumb to the current scope
 // and optionally throws the old one if limit is reached.
 func (scope *Scope) AddBreadcrumb(breadcrumb *Breadcrumb, limit int) {
-	if breadcrumb.Timestamp.IsZero() {
-		breadcrumb.Timestamp = time.Now()
-	}
-
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.breadcrumbs = append(scope.breadcrumbs, breadcrumb)
-	if len(scope.breadcrumbs) > limit {
-		scope.breadcrumbs = scope.breadcrumbs[1 : limit+1]
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // ClearBreadcrumbs clears all breadcrumbs from the current scope.
-func (scope *Scope) ClearBreadcrumbs() {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.breadcrumbs = []*Breadcrumb{}
-}
+func (scope *Scope) ClearBreadcrumbs() { _ = "STUB: not implemented"; return }
 
 // AddAttachment adds new attachment to the current scope.
-func (scope *Scope) AddAttachment(attachment *Attachment) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.attachments = append(scope.attachments, attachment)
-}
+func (scope *Scope) AddAttachment(attachment *Attachment) { _ = "STUB: not implemented"; return }
 
 // ClearAttachments clears all attachments from the current scope.
-func (scope *Scope) ClearAttachments() {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.attachments = []*Attachment{}
-}
+func (scope *Scope) ClearAttachments() { _ = "STUB: not implemented"; return }
 
 // SetUser sets the user for the current scope.
-func (scope *Scope) SetUser(user User) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.user = user
-}
+func (scope *Scope) SetUser(user User) { _ = "STUB: not implemented"; return }
 
 // SetRequest sets the request for the current scope.
-func (scope *Scope) SetRequest(r *http.Request) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
+func (scope *Scope) SetRequest(r *http.Request) { _ = "STUB: not implemented"; return }
 
-	scope.request = r
+// Don't buffer request body if we know it is oversized.
 
-	if r == nil {
-		return
-	}
-
-	// Don't buffer request body if we know it is oversized.
-	if r.ContentLength > maxRequestBodyBytes {
-		return
-	}
-	// Don't buffer if there is no body.
-	if r.Body == nil || r.Body == http.NoBody {
-		return
-	}
-	buf := &limitedBuffer{Capacity: maxRequestBodyBytes}
-	r.Body = readCloser{
-		Reader: io.TeeReader(r.Body, buf),
-		Closer: r.Body,
-	}
-	scope.requestBody = buf
-}
+// Don't buffer if there is no body.
 
 // SetRequestBody sets the request body for the current scope.
 //
 // This method should only be called when the body bytes are already available
 // in memory. Typically, the request body is buffered lazily from the
 // Request.Body from SetRequest.
-func (scope *Scope) SetRequestBody(b []byte) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	capacity := maxRequestBodyBytes
-	overflow := false
-	if len(b) > capacity {
-		overflow = true
-		b = b[:capacity]
-	}
-	scope.requestBody = &limitedBuffer{
-		Capacity: capacity,
-		Buffer:   *bytes.NewBuffer(b),
-		overflow: overflow,
-	}
-}
+func (scope *Scope) SetRequestBody(b []byte) { _ = "STUB: not implemented"; return }
 
 // maxRequestBodyBytes is the default maximum request body size to send to
 // Sentry.
@@ -181,379 +102,123 @@ type limitedBuffer struct {
 
 // Write implements io.Writer.
 func (b *limitedBuffer) Write(p []byte) (n int, err error) {
+	_ = "STUB: not implemented"
 	// Silently ignore writes after overflow.
-	if b.overflow {
-		return len(p), nil
-	}
-	left := b.Capacity - b.Len()
-	if left < 0 {
-		left = 0
-	}
-	if len(p) > left {
-		b.overflow = true
-		p = p[:left]
-	}
-	return b.Buffer.Write(p)
+	return 0, nil
 }
 
 // Overflow returns true if the limitedBuffer discarded bytes written to it.
 func (b *limitedBuffer) Overflow() bool {
-	return b.overflow
+	_ = "STUB: not implemented"
+
+	// readCloser combines an io.Reader and an io.Closer to implement io.ReadCloser.
+	return false
 }
 
-// readCloser combines an io.Reader and an io.Closer to implement io.ReadCloser.
 type readCloser struct {
 	io.Reader
 	io.Closer
 }
 
 // SetAttributes adds attributes to the current scope.
-func (scope *Scope) SetAttributes(attrs ...attribute.Builder) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	for _, a := range attrs {
-		if a.Value.Type() == attribute.INVALID {
-			debuglog.Printf("invalid attribute: %v", a)
-			continue
-		}
-		scope.attributes[a.Key] = a.Value
-	}
-}
+func (scope *Scope) SetAttributes(attrs ...attribute.Builder) { _ = "STUB: not implemented"; return }
 
 // RemoveAttribute removes an attribute from the current scope.
-func (scope *Scope) RemoveAttribute(key string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-	delete(scope.attributes, key)
-}
+func (scope *Scope) RemoveAttribute(key string) { _ = "STUB: not implemented"; return }
 
 // SetTag adds a tag to the current scope.
-func (scope *Scope) SetTag(key, value string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.tags[key] = value
-}
+func (scope *Scope) SetTag(key, value string) { _ = "STUB: not implemented"; return }
 
 // SetTags assigns multiple tags to the current scope.
-func (scope *Scope) SetTags(tags map[string]string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	for k, v := range tags {
-		scope.tags[k] = v
-	}
-}
+func (scope *Scope) SetTags(tags map[string]string) { _ = "STUB: not implemented"; return }
 
 // RemoveTag removes a tag from the current scope.
-func (scope *Scope) RemoveTag(key string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	delete(scope.tags, key)
-}
+func (scope *Scope) RemoveTag(key string) { _ = "STUB: not implemented"; return }
 
 // SetContext adds a context to the current scope.
-func (scope *Scope) SetContext(key string, value Context) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.contexts[key] = value
-}
+func (scope *Scope) SetContext(key string, value Context) { _ = "STUB: not implemented"; return }
 
 // SetContexts assigns multiple contexts to the current scope.
-func (scope *Scope) SetContexts(contexts map[string]Context) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	for k, v := range contexts {
-		scope.contexts[k] = v
-	}
-}
+func (scope *Scope) SetContexts(contexts map[string]Context) { _ = "STUB: not implemented"; return }
 
 // RemoveContext removes a context from the current scope.
-func (scope *Scope) RemoveContext(key string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	delete(scope.contexts, key)
-}
+func (scope *Scope) RemoveContext(key string) { _ = "STUB: not implemented"; return }
 
 // SetFingerprint sets new fingerprint for the current scope.
-func (scope *Scope) SetFingerprint(fingerprint []string) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.fingerprint = fingerprint
-}
+func (scope *Scope) SetFingerprint(fingerprint []string) { _ = "STUB: not implemented"; return }
 
 // SetLevel sets new level for the current scope.
-func (scope *Scope) SetLevel(level Level) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.level = level
-}
+func (scope *Scope) SetLevel(level Level) { _ = "STUB: not implemented"; return }
 
 // SetPropagationContext sets the propagation context for the current scope.
 func (scope *Scope) SetPropagationContext(propagationContext PropagationContext) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.propagationContext = propagationContext
+	_ = "STUB: not implemented"
+	return
 }
 
 func (scope *Scope) propagationContextSnapshot() PropagationContext {
-	scope.mu.RLock()
-	defer scope.mu.RUnlock()
-
-	return scope.propagationContext
+	_ = "STUB: not implemented"
+	return *new(PropagationContext)
 }
 
 // GetSpan returns the span from the current scope.
-func (scope *Scope) GetSpan() *Span {
-	scope.mu.RLock()
-	defer scope.mu.RUnlock()
-
-	return scope.span
-}
+func (scope *Scope) GetSpan() *Span { _ = "STUB: not implemented"; return nil }
 
 // SetSpan sets a span for the current scope.
-func (scope *Scope) SetSpan(span *Span) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.span = span
-}
+func (scope *Scope) SetSpan(span *Span) { _ = "STUB: not implemented"; return }
 
 // Clone returns a copy of the current scope with all data copied over.
-func (scope *Scope) Clone() *Scope {
-	scope.mu.RLock()
-	defer scope.mu.RUnlock()
-
-	clone := NewScope()
-	clone.user = scope.user
-	clone.breadcrumbs = make([]*Breadcrumb, len(scope.breadcrumbs))
-	copy(clone.breadcrumbs, scope.breadcrumbs)
-	clone.attachments = make([]*Attachment, len(scope.attachments))
-	copy(clone.attachments, scope.attachments)
-	clone.attributes = maps.Clone(scope.attributes)
-	clone.contexts = maps.Clone(scope.contexts)
-	clone.tags = maps.Clone(scope.tags)
-	clone.fingerprint = make([]string, len(scope.fingerprint))
-	copy(clone.fingerprint, scope.fingerprint)
-	clone.level = scope.level
-	clone.request = scope.request
-	clone.requestBody = scope.requestBody
-	clone.eventProcessors = scope.eventProcessors
-	clone.propagationContext = scope.propagationContext
-	clone.span = scope.span
-	return clone
-}
+func (scope *Scope) Clone() *Scope { _ = "STUB: not implemented"; return nil }
 
 // Clear removes the data from the current scope. Not safe for concurrent use.
-func (scope *Scope) Clear() {
-	*scope = *NewScope()
-}
+func (scope *Scope) Clear() { _ = "STUB: not implemented"; return }
 
 // AddEventProcessor adds an event processor to the current scope.
-func (scope *Scope) AddEventProcessor(processor EventProcessor) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-
-	scope.eventProcessors = append(scope.eventProcessors, processor)
-}
+func (scope *Scope) AddEventProcessor(processor EventProcessor) { _ = "STUB: not implemented"; return }
 
 // ApplyToEvent takes the data from the current scope and attaches it to the event.
-func (scope *Scope) ApplyToEvent(event *Event, hint *EventHint, client *Client) *Event { //nolint:gocyclo
-	scope.mu.RLock()
-	defer scope.mu.RUnlock()
-
-	if len(scope.breadcrumbs) > 0 {
-		event.Breadcrumbs = append(event.Breadcrumbs, scope.breadcrumbs...)
-	}
-
-	if len(scope.attachments) > 0 {
-		event.Attachments = append(event.Attachments, scope.attachments...)
-	}
-
-	if len(scope.tags) > 0 {
-		if event.Tags == nil {
-			event.Tags = make(map[string]string, len(scope.tags))
-		}
-
-		for key, value := range scope.tags {
-			event.Tags[key] = value
-		}
-	}
-
-	if len(scope.contexts) > 0 {
-		if event.Contexts == nil {
-			event.Contexts = make(map[string]Context)
-		}
-
-		for key, value := range scope.contexts {
-			if key == "trace" && event.Type == transactionType {
-				// Do not override trace context of
-				// transactions, otherwise it breaks the
-				// transaction event representation.
-				// For error events, the trace context is used
-				// to link errors and traces/spans in Sentry.
-				continue
-			}
-
-			// Ensure we are not overwriting event fields
-			if _, ok := event.Contexts[key]; !ok {
-				event.Contexts[key] = cloneContext(value)
-			}
-		}
-	}
-
-	if event.Contexts == nil {
-		event.Contexts = make(map[string]Context)
-	}
-
-	if scope.span != nil {
-		if _, ok := event.Contexts["trace"]; !ok {
-			event.Contexts["trace"] = scope.span.traceContext().Map()
-		}
-
-		transaction := scope.span.GetTransaction()
-		if transaction != nil {
-			event.sdkMetaData.dsc = DynamicSamplingContextFromTransaction(transaction)
-		}
-	} else {
-		event.Contexts["trace"] = scope.propagationContext.Map()
-
-		dsc := scope.propagationContext.DynamicSamplingContext
-		if !dsc.HasEntries() && client != nil {
-			dsc = DynamicSamplingContextFromScope(scope, client)
-		}
-		event.sdkMetaData.dsc = dsc
-	}
-
-	// If an external trace resolver is registered (e.g. OTel), override
-	// trace/span IDs from the hint context or the scope's request context.
-	if client != nil {
-		var ctx context.Context
-		if hint != nil {
-			ctx = hint.Context
-		}
-		if ctx == nil && scope.request != nil {
-			ctx = scope.request.Context()
-		}
-		if traceID, spanID, ok := client.externalTraceContextFromContext(ctx); event.Type != transactionType && ok {
-			traceCtx := event.Contexts["trace"]
-			traceCtx["trace_id"] = traceID.String()
-			traceCtx["span_id"] = spanID.String()
-		}
-	}
-
-	if event.User.IsEmpty() {
-		event.User = scope.user
-	}
-
-	if len(event.Fingerprint) == 0 {
-		event.Fingerprint = append(event.Fingerprint, scope.fingerprint...)
-	}
-
-	if scope.level != "" {
-		event.Level = scope.level
-	}
-
-	if event.Request == nil && scope.request != nil {
-		event.Request = newRequest(scope.request, sendDefaultPIIEnabled(client))
-		// NOTE: The SDK does not attempt to send partial request body data.
-		//
-		// The reason being that Sentry's ingest pipeline and UI are optimized
-		// to show structured data. Additionally, tooling around PII scrubbing
-		// relies on structured data; truncated request bodies would create
-		// invalid payloads that are more prone to leaking PII data.
-		//
-		// Users can still send more data along their events if they want to,
-		// for example using Event.Contexts.
-		if scope.requestBody != nil && !scope.requestBody.Overflow() {
-			event.Request.Data = string(scope.requestBody.Bytes())
-		}
-	}
-
-	for _, processor := range scope.eventProcessors {
-		id := event.EventID
-		category := event.toCategory()
-		spanCountBefore := event.GetSpanCount()
-		event = processor(event, hint)
-		if event == nil {
-			debuglog.Printf("Event dropped by one of the Scope EventProcessors: %s\n", id)
-			if client != nil {
-				client.reportRecorder.RecordOne(report.ReasonEventProcessor, category)
-				if category == ratelimit.CategoryTransaction {
-					client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(spanCountBefore))
-				}
-			}
-			return nil
-		}
-		if droppedSpans := spanCountBefore - event.GetSpanCount(); droppedSpans > 0 {
-			if client != nil {
-				client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(droppedSpans))
-			}
-		}
-	}
-
-	return event
+func (scope *Scope) ApplyToEvent(event *Event, hint *EventHint, client *Client) *Event {
+	_ = "STUB: not implemented" //nolint:gocyclo
+	return nil
 }
+
+// Do not override trace context of
+// transactions, otherwise it breaks the
+// transaction event representation.
+// For error events, the trace context is used
+// to link errors and traces/spans in Sentry.
+
+// Ensure we are not overwriting event fields
+
+// If an external trace resolver is registered (e.g. OTel), override
+// trace/span IDs from the hint context or the scope's request context.
+
+// NOTE: The SDK does not attempt to send partial request body data.
+//
+// The reason being that Sentry's ingest pipeline and UI are optimized
+// to show structured data. Additionally, tooling around PII scrubbing
+// relies on structured data; truncated request bodies would create
+// invalid payloads that are more prone to leaking PII data.
+//
+// Users can still send more data along their events if they want to,
+// for example using Event.Contexts.
 
 // cloneContext returns a new context with keys and values copied from the passed one.
 //
 // Note: a new Context (map) is returned, but the function does NOT do
 // a proper deep copy: if some context values are pointer types (e.g. maps),
 // they won't be properly copied.
-func cloneContext(c Context) Context {
-	res := make(Context, len(c))
-	for k, v := range c {
-		res[k] = v
-	}
-	return res
-}
+func cloneContext(c Context) Context { _ = "STUB: not implemented"; return *new(Context) }
 
 func (scope *Scope) populateAttrs(attrs map[string]attribute.Value) {
-	if scope == nil {
-		return
-	}
-
-	scope.mu.RLock()
-	defer scope.mu.RUnlock()
-
-	// Add user-related attributes
-	if !scope.user.IsEmpty() {
-		if scope.user.ID != "" {
-			attrs["user.id"] = attribute.StringValue(scope.user.ID)
-		}
-		if scope.user.Name != "" {
-			attrs["user.name"] = attribute.StringValue(scope.user.Name)
-		}
-		if scope.user.Email != "" {
-			attrs["user.email"] = attribute.StringValue(scope.user.Email)
-		}
-	}
-
-	for k, v := range scope.attributes {
-		attrs[k] = v
-	}
+	_ = "STUB: not implemented"
+	return
 }
+
+// Add user-related attributes
 
 // hubFromContexts is a helper to return the first hub found in the given contexts.
-func hubFromContexts(ctxs ...context.Context) *Hub {
-	for _, ctx := range ctxs {
-		if ctx == nil {
-			continue
-		}
-		if hub := GetHubFromContext(ctx); hub != nil {
-			return hub
-		}
-	}
-	return nil
-}
+func hubFromContexts(ctxs ...context.Context) *Hub { _ = "STUB: not implemented"; return nil }
 
 // resolveTrace resolves trace ID and span ID from the given scope and contexts.
 //
@@ -569,35 +234,6 @@ func hubFromContexts(ctxs ...context.Context) *Hub {
 // For example, if a specific span is active for an operation, we use that span's trace/span IDs
 // rather than accidentally using a different span that might be set on the hub's scope.
 func resolveTrace(scope *Scope, client *Client, ctxs ...context.Context) (traceID TraceID, spanID SpanID) {
-	var span *Span
-
-	for _, ctx := range ctxs {
-		if ctx == nil {
-			continue
-		}
-		if client != nil {
-			if traceID, spanID, ok := client.externalTraceContextFromContext(ctx); ok {
-				return traceID, spanID
-			}
-		}
-		if span = SpanFromContext(ctx); span != nil {
-			break
-		}
-	}
-
-	if scope != nil {
-		scope.mu.RLock()
-		if span == nil {
-			span = scope.span
-		}
-		if span != nil {
-			traceID = span.TraceID
-			spanID = span.SpanID
-		} else {
-			traceID = scope.propagationContext.TraceID
-		}
-		scope.mu.RUnlock()
-	}
-
-	return traceID, spanID
+	_ = "STUB: not implemented"
+	return *new(TraceID), *new(SpanID)
 }

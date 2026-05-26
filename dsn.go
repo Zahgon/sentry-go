@@ -18,13 +18,7 @@ type DsnParseError = protocol.DsnParseError
 // NewDsn creates a Dsn by parsing rawURL. Most users will never call this
 // function directly. It is provided for use in custom Transport
 // implementations.
-func NewDsn(rawURL string) (*Dsn, error) {
-	protocolDsn, err := protocol.NewDsn(rawURL)
-	if err != nil {
-		return nil, err
-	}
-	return &Dsn{Dsn: *protocolDsn}, nil
-}
+func NewDsn(rawURL string) (*Dsn, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // RequestHeaders returns all the necessary headers that have to be used in the transport when sending events
 // to the /store endpoint.
@@ -32,6 +26,4 @@ func NewDsn(rawURL string) (*Dsn, error) {
 // Deprecated: This method shall only be used if you want to implement your own transport that sends events to
 // the /store endpoint. If you're using the transport provided by the SDK, all necessary headers to authenticate
 // against the /envelope endpoint are added automatically.
-func (dsn Dsn) RequestHeaders() map[string]string {
-	return dsn.Dsn.RequestHeaders(SDKVersion)
-}
+func (dsn Dsn) RequestHeaders() map[string]string { _ = "STUB: not implemented"; return nil }

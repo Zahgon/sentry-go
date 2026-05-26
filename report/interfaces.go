@@ -27,19 +27,41 @@ type ClientReportProvider interface {
 // noopRecorder is a no-op implementation of ClientReportRecorder.
 type noopRecorder struct{}
 
-func (noopRecorder) Record(DiscardReason, ratelimit.Category, int64)     {}
-func (noopRecorder) RecordOne(DiscardReason, ratelimit.Category)         {}
-func (noopRecorder) RecordForEnvelope(DiscardReason, *protocol.Envelope) {}
-func (noopRecorder) RecordItem(DiscardReason, ReportableItem)            {}
+func (noopRecorder) Record(DiscardReason, ratelimit.Category, int64) {
+	_ = "STUB: not implemented"
+	return
+}
+func (noopRecorder) RecordOne(DiscardReason, ratelimit.Category) { _ = "STUB: not implemented"; return }
+func (noopRecorder) RecordForEnvelope(DiscardReason, *protocol.Envelope) {
+	_ = "STUB: not implemented"
+	return
+}
+func (noopRecorder) RecordItem(DiscardReason, ReportableItem) {
+	_ = "STUB: not implemented"
 
-// noopProvider is a no-op implementation of ClientReportProvider.
+	// noopProvider is a no-op implementation of ClientReportProvider.
+	return
+}
+
 type noopProvider struct{}
 
-func (noopProvider) TakeReport() *ClientReport             { return nil }
-func (noopProvider) AttachToEnvelope(_ *protocol.Envelope) {}
+func (noopProvider) TakeReport() *ClientReport { _ = "STUB: not implemented"; return nil }
+func (noopProvider) AttachToEnvelope(_ *protocol.Envelope) {
+	_ = "STUB: not implemented"
 
-// NoopRecorder returns a no-op ClientReportRecorder that silently discards all records.
-func NoopRecorder() ClientReportRecorder { return noopRecorder{} }
+	// NoopRecorder returns a no-op ClientReportRecorder that silently discards all records.
+	return
+}
 
-// NoopProvider returns a no-op ClientReportProvider that always returns nil reports.
-func NoopProvider() ClientReportProvider { return noopProvider{} }
+func NoopRecorder() ClientReportRecorder {
+	_ = "STUB: not implemented"
+	return *
+
+	// NoopProvider returns a no-op ClientReportProvider that always returns nil reports.
+	new(ClientReportRecorder)
+}
+
+func NoopProvider() ClientReportProvider {
+	_ = "STUB: not implemented"
+	return *new(ClientReportProvider)
+}

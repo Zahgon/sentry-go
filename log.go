@@ -2,15 +2,9 @@ package sentry
 
 import (
 	"context"
-	"fmt"
-	"maps"
-	"os"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/getsentry/sentry-go/attribute"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 )
 
 type LogLevel string
@@ -52,303 +46,106 @@ type logEntry struct {
 }
 
 // NewLogger returns a Logger that emits logs to Sentry. If logging is turned off, all logs get discarded.
-func NewLogger(ctx context.Context) Logger { // nolint: dupl
-	var hub *Hub
-	hub = GetHubFromContext(ctx)
-	if hub == nil {
-		hub = CurrentHub()
-	}
-
-	client := hub.Client()
-	if client != nil && !client.options.DisableLogs {
-		// Build default attrs
-		serverAddr := client.options.ServerName
-		if serverAddr == "" {
-			serverAddr, _ = os.Hostname()
-		}
-
-		defaults := map[string]string{
-			"sentry.release":        client.options.Release,
-			"sentry.environment":    client.options.Environment,
-			"sentry.server.address": serverAddr,
-			"sentry.sdk.name":       client.sdkIdentifier,
-			"sentry.sdk.version":    client.sdkVersion,
-		}
-
-		defaultAttrs := make(map[string]attribute.Value, len(defaults))
-		for k, v := range defaults {
-			if v != "" {
-				defaultAttrs[k] = attribute.StringValue(v)
-			}
-		}
-
-		return &sentryLogger{
-			ctx:               ctx,
-			hub:               hub,
-			attributes:        make(map[string]attribute.Value),
-			defaultAttributes: defaultAttrs,
-			mu:                sync.RWMutex{},
-		}
-	}
-
-	debuglog.Println("fallback to noopLogger: SDK not initialized or logs disabled")
-	return &noopLogger{}
+func NewLogger(ctx context.Context) Logger {
+	_ = "STUB: not implemented" // nolint: dupl
+	return *new(Logger)
 }
 
-func (l *sentryLogger) Write(p []byte) (int, error) {
-	msg := strings.TrimRight(string(p), "\n")
-	l.Info().Emit(msg)
-	return len(p), nil
-}
+// Build default attrs
+
+func (l *sentryLogger) Write(p []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func (l *sentryLogger) log(ctx context.Context, level LogLevel, severity int, message string, entryAttrs map[string]attribute.Value, args ...interface{}) {
-	if message == "" {
-		return
-	}
-
-	hub := hubFromContexts(ctx, l.ctx)
-	if hub == nil {
-		hub = l.hub
-	}
-	client := hub.Client()
-	if client == nil {
-		return
-	}
-
-	scope := hub.Scope()
-	traceID, spanID := resolveTrace(scope, client, ctx, l.ctx)
-
-	// Pre-allocate with capacity hint to avoid map growth reallocations
-	estimatedCap := len(l.defaultAttributes) + len(entryAttrs) + len(args) + 8 // scope ~3 + instance ~5
-	attrs := make(map[string]attribute.Value, estimatedCap)
-
-	// attribute precedence: default -> scope -> instance (from SetAttrs) -> entry-specific
-	for k, v := range l.defaultAttributes {
-		attrs[k] = v
-	}
-	scope.populateAttrs(attrs)
-
-	l.mu.RLock()
-	for k, v := range l.attributes {
-		attrs[k] = v
-	}
-	l.mu.RUnlock()
-
-	for k, v := range entryAttrs {
-		attrs[k] = v
-	}
-
-	if len(args) > 0 {
-		attrs["sentry.message.template"] = attribute.StringValue(message)
-		for i, p := range args {
-			attrs[fmt.Sprintf("sentry.message.parameters.%d", i)] = attribute.StringValue(fmt.Sprintf("%+v", p))
-		}
-	}
-
-	log := &Log{
-		Timestamp:  time.Now(),
-		TraceID:    traceID,
-		SpanID:     spanID,
-		Level:      level,
-		Severity:   severity,
-		Body:       fmt.Sprintf(message, args...),
-		Attributes: attrs,
-	}
-	log.approximateSize = computeLogSize(log)
-
-	client.captureLog(log, scope)
-	if client.options.Debug {
-		debuglog.Printf(message, args...)
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
-func (l *sentryLogger) SetAttributes(attrs ...attribute.Builder) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+// Pre-allocate with capacity hint to avoid map growth reallocations
+// scope ~3 + instance ~5
 
-	for _, a := range attrs {
-		if a.Value.Type() == attribute.INVALID {
-			debuglog.Printf("invalid attribute: %v", a)
-			continue
-		}
-		l.attributes[a.Key] = a.Value
-	}
-}
+// attribute precedence: default -> scope -> instance (from SetAttrs) -> entry-specific
 
-func (l *sentryLogger) Trace() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelTrace,
-		severity:   LogSeverityTrace,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) SetAttributes(attrs ...attribute.Builder) { _ = "STUB: not implemented"; return }
 
-func (l *sentryLogger) Debug() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelDebug,
-		severity:   LogSeverityDebug,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) Trace() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) Info() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelInfo,
-		severity:   LogSeverityInfo,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) Debug() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) Warn() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelWarn,
-		severity:   LogSeverityWarning,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) Info() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) Error() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelError,
-		severity:   LogSeverityError,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) Warn() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) Fatal() LogEntry {
-	return &logEntry{
-		logger:      l,
-		ctx:         l.ctx,
-		level:       LogLevelFatal,
-		severity:    LogSeverityFatal,
-		attributes:  make(map[string]attribute.Value),
-		shouldFatal: true,
-	}
-}
+func (l *sentryLogger) Error() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) Panic() LogEntry {
-	return &logEntry{
-		logger:      l,
-		ctx:         l.ctx,
-		level:       LogLevelFatal,
-		severity:    LogSeverityFatal,
-		attributes:  make(map[string]attribute.Value),
-		shouldPanic: true,
-	}
-}
+func (l *sentryLogger) Fatal() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
-func (l *sentryLogger) LFatal() LogEntry {
-	return &logEntry{
-		logger:     l,
-		ctx:        l.ctx,
-		level:      LogLevelFatal,
-		severity:   LogSeverityFatal,
-		attributes: make(map[string]attribute.Value),
-	}
-}
+func (l *sentryLogger) Panic() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
+
+func (l *sentryLogger) LFatal() LogEntry { _ = "STUB: not implemented"; return *new(LogEntry) }
 
 func (l *sentryLogger) GetCtx() context.Context {
-	return l.ctx
+	_ = "STUB: not implemented"
+	return *new(context.Context)
 }
 
 func (e *logEntry) WithCtx(ctx context.Context) LogEntry {
-	return &logEntry{
-		logger:      e.logger,
-		ctx:         ctx,
-		level:       e.level,
-		severity:    e.severity,
-		attributes:  maps.Clone(e.attributes),
-		shouldPanic: e.shouldPanic,
-		shouldFatal: e.shouldFatal,
-	}
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) String(key, value string) LogEntry {
-	e.attributes[key] = attribute.StringValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) StringSlice(key string, value []string) LogEntry {
-	e.attributes[key] = attribute.StringSliceValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Int(key string, value int) LogEntry {
-	e.attributes[key] = attribute.Int64Value(int64(value))
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Int64Slice(key string, value []int64) LogEntry {
-	e.attributes[key] = attribute.Int64SliceValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Int64(key string, value int64) LogEntry {
-	e.attributes[key] = attribute.Int64Value(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Float64Slice(key string, value []float64) LogEntry {
-	e.attributes[key] = attribute.Float64SliceValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Float64(key string, value float64) LogEntry {
-	e.attributes[key] = attribute.Float64Value(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) BoolSlice(key string, value []bool) LogEntry {
-	e.attributes[key] = attribute.BoolSliceValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 func (e *logEntry) Bool(key string, value bool) LogEntry {
-	e.attributes[key] = attribute.BoolValue(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
 // Uint64 adds uint64 attributes to the log entry.
 //
 // This method is intentionally not part of the LogEntry interface to avoid exposing uint64 in the public API.
 func (e *logEntry) Uint64(key string, value uint64) LogEntry {
-	e.attributes[key] = attribute.Uint64Value(value)
-	return e
+	_ = "STUB: not implemented"
+	return *new(LogEntry)
 }
 
-func (e *logEntry) Emit(args ...interface{}) {
-	e.logger.log(e.ctx, e.level, e.severity, fmt.Sprint(args...), e.attributes)
+func (e *logEntry) Emit(args ...interface{}) { _ = "STUB: not implemented"; return }
 
-	if e.level == LogLevelFatal {
-		if e.shouldPanic {
-			panic(fmt.Sprint(args...))
-		}
-		if e.shouldFatal {
-			os.Exit(1)
-		}
-	}
-}
-
-func (e *logEntry) Emitf(format string, args ...interface{}) {
-	e.logger.log(e.ctx, e.level, e.severity, format, e.attributes, args...)
-
-	if e.level == LogLevelFatal {
-		if e.shouldPanic {
-			formattedMessage := fmt.Sprintf(format, args...)
-			panic(formattedMessage)
-		}
-		if e.shouldFatal {
-			os.Exit(1)
-		}
-	}
-}
+func (e *logEntry) Emitf(format string, args ...interface{}) { _ = "STUB: not implemented"; return }

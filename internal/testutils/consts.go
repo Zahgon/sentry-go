@@ -1,19 +1,14 @@
 package testutils
 
 import (
-	"os"
 	"time"
 )
 
-func IsCI() bool {
-	return os.Getenv("CI") != ""
-}
+func IsCI() bool { _ = "STUB: not implemented"; return false }
 
 func FlushTimeout() time.Duration {
-	if IsCI() {
-		// CI is very overloaded so we need to allow for a long wait time.
-		return 5 * time.Second
-	}
+	_ = "STUB: not implemented"
 
-	return time.Second
+	// CI is very overloaded so we need to allow for a long wait time.
+	return *new(time.Duration)
 }

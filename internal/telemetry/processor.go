@@ -22,34 +22,24 @@ func NewProcessor(
 	sdkInfo func() *protocol.SdkInfo,
 	recorder report.ClientReportRecorder,
 ) *Processor {
-	scheduler := NewScheduler(buffers, transport, dsn, sdkInfo, recorder)
-	scheduler.Start()
-
-	return &Processor{
-		scheduler: scheduler,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Add adds a TelemetryItem to the appropriate buffer based on its category.
 //
 // The processor should call MakeSerializationSafe to eliminate any race on user mutable fields,
 // since the serialization happens on a background goroutine.
-func (b *Processor) Add(item protocol.TelemetryItem) bool {
-	item.MakeSerializationSafe()
-	return b.scheduler.Add(item)
-}
+func (b *Processor) Add(item protocol.TelemetryItem) bool { _ = "STUB: not implemented"; return false }
 
 // Flush forces all buffers to flush within the given timeout.
-func (b *Processor) Flush(timeout time.Duration) bool {
-	return b.scheduler.Flush(timeout)
-}
+func (b *Processor) Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 // FlushWithContext flushes with a custom context for cancellation.
 func (b *Processor) FlushWithContext(ctx context.Context) bool {
-	return b.scheduler.FlushWithContext(ctx)
+	_ = "STUB: not implemented"
+	return false
 }
 
 // Close stops the buffer, flushes remaining data, and releases resources.
-func (b *Processor) Close(timeout time.Duration) {
-	b.scheduler.Stop(timeout)
-}
+func (b *Processor) Close(timeout time.Duration) { _ = "STUB: not implemented"; return }

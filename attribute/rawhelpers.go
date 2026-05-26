@@ -15,35 +15,29 @@
 
 package attribute
 
-import (
-	"math"
-)
-
-func boolToRaw(b bool) uint64 { // b is not a control flag.
-	if b {
-		return 1
-	}
+func boolToRaw(b bool) uint64 {
+	_ = "STUB: not implemented" // b is not a control flag.
 	return 0
 }
 
-func rawToBool(r uint64) bool {
-	return r != 0
-}
+func rawToBool(r uint64) bool { _ = "STUB: not implemented"; return false }
 
 func int64ToRaw(i int64) uint64 {
+	_ = "STUB: not implemented"
 	// Assumes original was a valid int64 (overflow not checked).
-	return uint64(i) // nolint: gosec
+	return 0
 }
+
+// nolint: gosec
 
 func rawToInt64(r uint64) int64 {
+	_ = "STUB: not implemented"
 	// Assumes original was a valid int64 (overflow not checked).
-	return int64(r) // nolint: gosec
+	return 0
 }
 
-func float64ToRaw(f float64) uint64 {
-	return math.Float64bits(f)
-}
+// nolint: gosec
 
-func rawToFloat64(r uint64) float64 {
-	return math.Float64frombits(r)
-}
+func float64ToRaw(f float64) uint64 { _ = "STUB: not implemented"; return 0 }
+
+func rawToFloat64(r uint64) float64 { _ = "STUB: not implemented"; return 0 }

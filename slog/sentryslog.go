@@ -2,11 +2,9 @@ package sentryslog
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/attribute"
 )
 
 // Majority of the code in this package is derived from https://github.com/samber/slog-sentry AND https://github.com/samber/slog-common
@@ -90,46 +88,11 @@ type Option struct {
 }
 
 func (o Option) NewSentryHandler(ctx context.Context) slog.Handler {
-	if o.EventLevel == nil {
-		// backwards compatibility
-		if o.Level != nil {
-			o.EventLevel = levelsFromMinimum(o.Level.Level())
-		} else {
-			o.EventLevel = []slog.Level{slog.LevelError, LevelFatal}
-		}
-	}
-	if o.LogLevel == nil {
-		o.LogLevel = []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}
-	}
+	_ = "STUB: not implemented"
+	return *
 
-	if o.Converter == nil {
-		o.Converter = DefaultConverter
-	}
-
-	if o.AttrFromContext == nil {
-		o.AttrFromContext = []func(ctx context.Context) []slog.Attr{}
-	}
-
-	logger := sentry.NewLogger(ctx)
-	logger.SetAttributes(attribute.String("sentry.origin", SlogOrigin))
-
-	eventHandler := &eventHandler{
-		ctx:    ctx,
-		option: o,
-		attrs:  []slog.Attr{},
-		groups: []string{},
-	}
-	logHandler := &logHandler{
-		option: o,
-		attrs:  []slog.Attr{},
-		groups: []string{},
-		logger: logger,
-	}
-
-	return &SentryHandler{
-		eventHandler: eventHandler,
-		logHandler:   logHandler,
-	}
+	// backwards compatibility
+	new(slog.Handler)
 }
 
 type SentryHandler struct {
@@ -138,35 +101,23 @@ type SentryHandler struct {
 }
 
 func (h *SentryHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	return h.eventHandler.Enabled(ctx, level) || h.logHandler.Enabled(ctx, level)
+	_ = "STUB: not implemented"
+	return false
 }
 
 func (h *SentryHandler) Handle(ctx context.Context, record slog.Record) error {
-	var err error
-
-	if h.eventHandler.Enabled(ctx, record.Level) {
-		err = errors.Join(err, h.eventHandler.Handle(ctx, record))
-	}
-
-	if h.logHandler.Enabled(ctx, record.Level) {
-		err = errors.Join(err, h.logHandler.Handle(ctx, record))
-	}
-
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (h *SentryHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &SentryHandler{
-		eventHandler: h.eventHandler.WithAttrs(attrs),
-		logHandler:   h.logHandler.WithAttrs(attrs),
-	}
+	_ = "STUB: not implemented"
+	return *new(slog.Handler)
 }
 
 func (h *SentryHandler) WithGroup(name string) slog.Handler {
-	return &SentryHandler{
-		eventHandler: h.eventHandler.WithGroup(name),
-		logHandler:   h.logHandler.WithGroup(name),
-	}
+	_ = "STUB: not implemented"
+	return *new(slog.Handler)
 }
 
 type eventHandler struct {
@@ -177,61 +128,24 @@ type eventHandler struct {
 }
 
 func (h *eventHandler) Enabled(_ context.Context, level slog.Level) bool {
-	for _, eventLevel := range h.option.EventLevel {
-		if level == eventLevel {
-			return true
-		}
-	}
+	_ = "STUB: not implemented"
 	return false
 }
 
 func (h *eventHandler) Handle(ctx context.Context, record slog.Record) error {
-	hub := sentry.GetHubFromContext(h.ctx)
-	if hub == nil {
-		hub = sentry.CurrentHub()
-	}
-	if hubFromContext := sentry.GetHubFromContext(ctx); hubFromContext != nil {
-		hub = hubFromContext
-	} else if h.option.Hub != nil {
-		hub = h.option.Hub
-	}
-
-	fromContext := contextExtractor(ctx, h.option.AttrFromContext)
-	event := h.option.Converter(h.option.AddSource, h.option.ReplaceAttr, append(h.attrs, fromContext...), h.groups, &record, hub)
-	hub.CaptureEventWithHint(event, &sentry.EventHint{Context: ctx})
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (h *eventHandler) WithAttrs(attrs []slog.Attr) *eventHandler {
+	_ = "STUB: not implemented"
 	// Create a copy of the groups slice to avoid sharing state
-	groupsCopy := make([]string, len(h.groups))
-	copy(groupsCopy, h.groups)
-
-	return &eventHandler{
-		ctx:    h.ctx,
-		option: h.option,
-		attrs:  appendAttrsToGroup(h.groups, h.attrs, attrs...),
-		groups: groupsCopy,
-	}
+	return nil
 }
 
-func (h *eventHandler) WithGroup(name string) *eventHandler {
-	if name == "" {
-		return h
-	}
+func (h *eventHandler) WithGroup(name string) *eventHandler { _ = "STUB: not implemented"; return nil }
 
-	// Create a copy of the groups slice to avoid modifying the original
-	newGroups := make([]string, len(h.groups), len(h.groups)+1)
-	copy(newGroups, h.groups)
-	newGroups = append(newGroups, name)
-
-	return &eventHandler{
-		ctx:    h.ctx,
-		option: h.option,
-		attrs:  h.attrs,
-		groups: newGroups,
-	}
-}
+// Create a copy of the groups slice to avoid modifying the original
 
 type logHandler struct {
 	option Option
@@ -241,113 +155,40 @@ type logHandler struct {
 }
 
 func (h *logHandler) Enabled(_ context.Context, level slog.Level) bool {
-	for _, logLevel := range h.option.LogLevel {
-		if level == logLevel {
-			return true
-		}
-	}
+	_ = "STUB: not implemented"
 	return false
 }
 
 func (h *logHandler) Handle(ctx context.Context, record slog.Record) error {
+	_ = "STUB: not implemented"
 	// when logging without context, slog passes `context.Background`. Check for span existence to not overwrite the root context.
-	if sentry.GetHubFromContext(ctx) == nil {
-		ctx = h.logger.GetCtx()
-	}
-	// aggregate all attributes
-	attrs := appendRecordAttrsToAttrs(h.attrs, h.groups, &record)
-	if h.option.AddSource {
-		attrs = append(attrs, source(sourceKey, &record))
-	}
-	attrs = replaceAttrs(h.option.ReplaceAttr, []string{}, attrs...)
-	attrs = removeEmptyAttrs(attrs)
-
-	// Use level ranges instead of exact matches to support custom levels
-	switch {
-	case record.Level < slog.LevelDebug:
-		// Levels below Debug (e.g., Trace)
-		logEntry := h.logger.Trace().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	case record.Level < slog.LevelInfo:
-		// Debug level range: -4 to -1
-		logEntry := h.logger.Debug().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	case record.Level < slog.LevelWarn:
-		// Info level range: 0 to 3
-		logEntry := h.logger.Info().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	case record.Level < slog.LevelError:
-		// Warn level range: 4 to 7
-		logEntry := h.logger.Warn().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	case record.Level < LevelFatal: // custom Fatal level, keep +4 increments
-		logEntry := h.logger.Error().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	default:
-		// Fatal level range: 12 and above
-		logEntry := h.logger.Fatal().WithCtx(ctx)
-		for _, attr := range attrs {
-			logEntry = slogAttrToLogEntry(logEntry, "", attr)
-		}
-		logEntry.Emit(record.Message)
-	}
-
 	return nil
 }
 
+// aggregate all attributes
+
+// Use level ranges instead of exact matches to support custom levels
+
+// Levels below Debug (e.g., Trace)
+
+// Debug level range: -4 to -1
+
+// Info level range: 0 to 3
+
+// Warn level range: 4 to 7
+
+// custom Fatal level, keep +4 increments
+
+// Fatal level range: 12 and above
+
 func (h *logHandler) WithAttrs(attrs []slog.Attr) *logHandler {
+	_ = "STUB: not implemented"
 	// Create a copy of the groups slice to avoid sharing state
-	groupsCopy := make([]string, len(h.groups))
-	copy(groupsCopy, h.groups)
-
-	return &logHandler{
-		option: h.option,
-		attrs:  appendAttrsToGroup(h.groups, h.attrs, attrs...),
-		groups: groupsCopy,
-		logger: h.logger,
-	}
+	return nil
 }
 
-func (h *logHandler) WithGroup(name string) *logHandler {
-	if name == "" {
-		return h
-	}
+func (h *logHandler) WithGroup(name string) *logHandler { _ = "STUB: not implemented"; return nil }
 
-	// Create a copy of the groups slice to avoid modifying the original
-	newGroups := make([]string, len(h.groups), len(h.groups)+1)
-	copy(newGroups, h.groups)
-	newGroups = append(newGroups, name)
+// Create a copy of the groups slice to avoid modifying the original
 
-	return &logHandler{
-		option: h.option,
-		attrs:  h.attrs,
-		groups: newGroups,
-		logger: h.logger,
-	}
-}
-
-func levelsFromMinimum(minLevel slog.Level) []slog.Level {
-	allLevels := []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}
-	var result []slog.Level
-	for _, level := range allLevels {
-		if level >= minLevel {
-			result = append(result, level)
-		}
-	}
-	return result
-}
+func levelsFromMinimum(minLevel slog.Level) []slog.Level { _ = "STUB: not implemented"; return nil }

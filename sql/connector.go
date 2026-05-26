@@ -3,7 +3,6 @@ package sentrysql
 import (
 	"context"
 	"database/sql/driver"
-	"io"
 )
 
 // sentryConnector wraps a driver.Connector so that returned connections are
@@ -15,30 +14,23 @@ type sentryConnector struct {
 }
 
 func newConnector(c driver.Connector, cfg *config) *sentryConnector {
-	return &sentryConnector{
-		connector: c,
-		drv:       newDriver(c.Driver(), cfg),
-		cfg:       cfg,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Connect implements driver.Connector.
 func (c *sentryConnector) Connect(ctx context.Context) (driver.Conn, error) {
-	conn, err := c.connector.Connect(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return newConn(conn, c.cfg), nil
+	_ = "STUB: not implemented"
+	return *new(driver.Conn), nil
 }
 
 // Driver implements driver.Connector.
-func (c *sentryConnector) Driver() driver.Driver { return c.drv }
+func (c *sentryConnector) Driver() driver.Driver {
+	_ = "STUB: not implemented"
 
-// Close checks if underlying connector implements io.Closer to Close
-// the connection.
-func (c *sentryConnector) Close() error {
-	if cl, ok := c.connector.(io.Closer); ok {
-		return cl.Close()
-	}
-	return nil
+	// Close checks if underlying connector implements io.Closer to Close
+	// the connection.
+	return *new(driver.Driver)
 }
+
+func (c *sentryConnector) Close() error { _ = "STUB: not implemented"; return nil }

@@ -3,21 +3,15 @@ package sentry
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
-	"sort"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go/internal/debug"
 	"github.com/getsentry/sentry-go/internal/debuglog"
-	httpInternal "github.com/getsentry/sentry-go/internal/http"
 	"github.com/getsentry/sentry-go/internal/protocol"
-	"github.com/getsentry/sentry-go/internal/ratelimit"
 	"github.com/getsentry/sentry-go/internal/telemetry"
 	"github.com/getsentry/sentry-go/report"
 )
@@ -62,11 +56,7 @@ type lockedRand struct {
 }
 
 // Float64 returns a pseudo-random number in [0.0,1.0).
-func (r *lockedRand) Float64() float64 {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.r.Float64()
-}
+func (r *lockedRand) Float64() float64 { _ = "STUB: not implemented"; return 0 }
 
 // rng is the internal random number generator.
 //
@@ -118,9 +108,7 @@ var globalEventProcessors []EventProcessor
 // AddGlobalEventProcessor is deprecated. Most users will prefer to initialize
 // the SDK with Init and provide a ClientOptions.BeforeSend function or use
 // Scope.AddEventProcessor instead.
-func AddGlobalEventProcessor(processor EventProcessor) {
-	globalEventProcessors = append(globalEventProcessors, processor)
-}
+func AddGlobalEventProcessor(processor EventProcessor) { _ = "STUB: not implemented"; return }
 
 // Integration allows for registering a functions that modify or discard captured events.
 type Integration interface {
@@ -319,6 +307,7 @@ type Client struct {
 // single goroutine) or hub methods (for concurrent programs, for example web
 // servers).
 func NewClient(options ClientOptions) (*Client, error) {
+	_ = "STUB: not implemented"
 	// The default error event sample rate for all SDKs is 1.0 (send all).
 	//
 	// In Go, the zero value (default) for float64 is 0.0, which means that
@@ -337,212 +326,31 @@ func NewClient(options ClientOptions) (*Client, error) {
 	// pattern. That would either require a breaking change if we want to reuse
 	// the obvious NewClient name, or a new function as an alternative
 	// constructor.
-	if options.SampleRate == 0.0 {
-		options.SampleRate = 1.0
-	}
-
-	if options.Debug {
-		debugWriter := options.DebugWriter
-		if debugWriter == nil {
-			debugWriter = os.Stderr
-		}
-		debuglog.SetOutput(debugWriter)
-	}
-
-	if options.Dsn == "" {
-		options.Dsn = os.Getenv("SENTRY_DSN")
-	}
-
-	if options.Release == "" {
-		options.Release = defaultRelease()
-	}
-
-	if options.Environment == "" {
-		options.Environment = os.Getenv("SENTRY_ENVIRONMENT")
-	}
-
-	if options.MaxErrorDepth == 0 {
-		options.MaxErrorDepth = maxErrorDepth
-	}
-
-	if options.MaxSpans == 0 {
-		options.MaxSpans = defaultMaxSpans
-	}
-
-	if options.TraceIgnoreStatusCodes == nil {
-		options.TraceIgnoreStatusCodes = [][]int{{404}}
-	}
-
-	// SENTRYGODEBUG is a comma-separated list of key=value pairs (similar
-	// to GODEBUG). It is not a supported feature: recognized debug options
-	// may change any time.
-	//
-	// The intended public is SDK developers. It is orthogonal to
-	// options.Debug, which is also available for SDK users.
-	dbg := strings.Split(os.Getenv("SENTRYGODEBUG"), ",")
-	sort.Strings(dbg)
-	// dbgOpt returns true when the given debug option is enabled, for
-	// example SENTRYGODEBUG=someopt=1.
-	dbgOpt := func(opt string) bool {
-		s := opt + "=1"
-		return dbg[sort.SearchStrings(dbg, s)%len(dbg)] == s
-	}
-	if dbgOpt("httpdump") || dbgOpt("httptrace") {
-		options.HTTPTransport = &debug.Transport{
-			RoundTripper: http.DefaultTransport,
-			Output:       os.Stderr,
-			Dump:         dbgOpt("httpdump"),
-			Trace:        dbgOpt("httptrace"),
-		}
-	}
-
-	var dsn *protocol.Dsn
-	if options.Dsn != "" {
-		var err error
-		dsn, err = protocol.NewDsn(options.Dsn)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	client := Client{
-		options:        options,
-		dsn:            dsn,
-		sdkIdentifier:  sdkIdentifier,
-		sdkVersion:     SDKVersion,
-		reportRecorder: report.NoopRecorder(),
-		reportProvider: report.NoopProvider(),
-	}
-
-	if !options.DisableClientReports {
-		a := report.NewAggregator()
-		client.reportRecorder = a
-		client.reportProvider = a
-	}
-
-	// We currently disallow using custom Transport with the new Telemetry Processor, due to the difference in transport signatures.
-	// The option should be enabled when the new Transport interface signature changes.
-	if !options.DisableTelemetryBuffer && client.options.Transport == nil {
-		client.setupTelemetryProcessor()
-	} else {
-		if client.options.Transport != nil {
-			debuglog.Println("Cannot enable Telemetry Processor with custom Transport: fallback to old transport")
-		}
-		client.setupTransport()
-
-		if !options.DisableLogs {
-			client.batchLogger = newLogBatchProcessor(&client)
-			client.batchLogger.Start()
-		}
-		if !options.DisableMetrics {
-			client.batchMeter = newMetricBatchProcessor(&client)
-			client.batchMeter.Start()
-		}
-	}
-	client.setupIntegrations()
-	if options.OrgID != 0 && client.dsn != nil {
-		client.dsn.SetOrgID(options.OrgID)
-	}
-
-	return &client, nil
+	return nil, nil
 }
 
-func (client *Client) setupTransport() {
-	opts := client.options
-	transport := opts.Transport
+// SENTRYGODEBUG is a comma-separated list of key=value pairs (similar
+// to GODEBUG). It is not a supported feature: recognized debug options
+// may change any time.
+//
+// The intended public is SDK developers. It is orthogonal to
+// options.Debug, which is also available for SDK users.
 
-	if transport == nil {
-		if opts.Dsn == "" {
-			transport = new(noopTransport)
-		} else {
-			httpTransport := NewHTTPTransport()
-			httpTransport.recorder = client.reportRecorder
-			httpTransport.provider = client.reportProvider
-			transport = httpTransport
-		}
-	} else {
-		// For known transport types, inject the client report interfaces.
-		switch tr := transport.(type) {
-		case *HTTPTransport:
-			tr.recorder = client.reportRecorder
-			tr.provider = client.reportProvider
-		case *HTTPSyncTransport:
-			tr.recorder = client.reportRecorder
-			tr.provider = client.reportProvider
-		case *internalAsyncTransportAdapter:
-			tr.recorder = client.reportRecorder
-			tr.provider = client.reportProvider
-		}
-	}
+// dbgOpt returns true when the given debug option is enabled, for
+// example SENTRYGODEBUG=someopt=1.
 
-	transport.Configure(opts)
-	client.Transport = transport
-}
+// We currently disallow using custom Transport with the new Telemetry Processor, due to the difference in transport signatures.
+// The option should be enabled when the new Transport interface signature changes.
 
-func (client *Client) sdkInfo() *protocol.SdkInfo {
-	return &protocol.SdkInfo{
-		Name:         client.GetSDKIdentifier(),
-		Version:      SDKVersion,
-		Integrations: client.listIntegrations(),
-		Packages: []SdkPackage{{
-			Name:    "sentry-go",
-			Version: SDKVersion,
-		}},
-	}
-}
+func (client *Client) setupTransport() { _ = "STUB: not implemented"; return }
 
-func (client *Client) setupTelemetryProcessor() {
-	transport := httpInternal.NewAsyncTransport(httpInternal.TransportOptions{
-		Dsn:           client.options.Dsn,
-		HTTPClient:    client.options.HTTPClient,
-		HTTPTransport: client.options.HTTPTransport,
-		HTTPProxy:     client.options.HTTPProxy,
-		HTTPSProxy:    client.options.HTTPSProxy,
-		CaCerts:       client.options.CaCerts,
-		Recorder:      client.reportRecorder,
-		Provider:      client.reportProvider,
-		SdkInfo:       client.sdkInfo,
-	})
-	client.Transport = &internalAsyncTransportAdapter{transport: transport}
+// For known transport types, inject the client report interfaces.
 
-	buffers := map[ratelimit.Category]telemetry.Buffer[protocol.TelemetryItem]{
-		ratelimit.CategoryError:       telemetry.NewRingBuffer[protocol.TelemetryItem](ratelimit.CategoryError, 100, telemetry.OverflowPolicyDropOldest, 1, 0, client.reportRecorder),
-		ratelimit.CategoryTransaction: telemetry.NewRingBuffer[protocol.TelemetryItem](ratelimit.CategoryTransaction, 1000, telemetry.OverflowPolicyDropOldest, 1, 0, client.reportRecorder),
-		ratelimit.CategoryLog:         telemetry.NewRingBuffer[protocol.TelemetryItem](ratelimit.CategoryLog, 10*100, telemetry.OverflowPolicyDropOldest, 100, 5*time.Second, client.reportRecorder),
-		ratelimit.CategoryMonitor:     telemetry.NewRingBuffer[protocol.TelemetryItem](ratelimit.CategoryMonitor, 100, telemetry.OverflowPolicyDropOldest, 1, 0, client.reportRecorder),
-		ratelimit.CategoryTraceMetric: telemetry.NewRingBuffer[protocol.TelemetryItem](ratelimit.CategoryTraceMetric, 10*100, telemetry.OverflowPolicyDropOldest, 100, 5*time.Second, client.reportRecorder),
-	}
+func (client *Client) sdkInfo() *protocol.SdkInfo { _ = "STUB: not implemented"; return nil }
 
-	client.telemetryProcessor = telemetry.NewProcessor(buffers, transport, client.dsn, client.sdkInfo, client.reportRecorder)
-}
+func (client *Client) setupTelemetryProcessor() { _ = "STUB: not implemented"; return }
 
-func (client *Client) setupIntegrations() {
-	integrations := []Integration{
-		new(environmentIntegration),
-		new(modulesIntegration),
-		new(ignoreErrorsIntegration),
-		new(ignoreTransactionsIntegration),
-		new(globalTagsIntegration),
-	}
-
-	if client.options.Integrations != nil {
-		integrations = client.options.Integrations(integrations)
-	}
-
-	for _, integration := range integrations {
-		if client.integrationAlreadyInstalled(integration.Name()) {
-			debuglog.Printf("Integration %s is already installed\n", integration.Name())
-			continue
-		}
-		client.integrations = append(client.integrations, integration)
-		integration.SetupOnce(client)
-		debuglog.Printf("Integration installed: %s\n", integration.Name())
-	}
-
-	sort.Slice(client.integrations, func(i, j int) bool {
-		return client.integrations[i].Name() < client.integrations[j].Name()
-	})
-}
+func (client *Client) setupIntegrations() { _ = "STUB: not implemented"; return }
 
 // AddEventProcessor adds an event processor to the client. It must not be
 // called from concurrent goroutines. Most users will prefer to use
@@ -552,7 +360,8 @@ func (client *Client) setupIntegrations() {
 // client is shared among multiple hubs, one per goroutine, such that adding an
 // event processor to the client affects all hubs that share the client.
 func (client *Client) AddEventProcessor(processor EventProcessor) {
-	client.eventProcessors = append(client.eventProcessors, processor)
+	_ = "STUB: not implemented"
+	return
 }
 
 // SetExternalContextTraceResolver installs a resolver used to extract trace/span IDs
@@ -560,53 +369,37 @@ func (client *Client) AddEventProcessor(processor EventProcessor) {
 //
 // This is intended for integrations such as OpenTelemetry.
 func (client *Client) SetExternalContextTraceResolver(resolver func(ctx context.Context) (TraceID, SpanID, bool)) {
-	client.mu.Lock()
-	defer client.mu.Unlock()
-
-	client.externalTraceResolver = resolver
+	_ = "STUB: not implemented"
+	return
 }
 
 func (client *Client) externalTraceContextFromContext(ctx context.Context) (TraceID, SpanID, bool) {
-	if ctx == nil {
-		return TraceID{}, SpanID{}, false
-	}
-
-	client.mu.RLock()
-	resolver := client.externalTraceResolver
-	client.mu.RUnlock()
-
-	if resolver == nil {
-		return TraceID{}, SpanID{}, false
-	}
-
-	return resolver(ctx)
+	_ = "STUB: not implemented"
+	return *new(TraceID), *new(SpanID), false
 }
 
 // Options return ClientOptions for the current Client.
 func (client *Client) Options() ClientOptions {
+	_ = "STUB: not implemented"
 	// Note: internally, consider using `client.options` instead of `client.Options()` to avoid copying the object each time.
-	return client.options
+	return *new(ClientOptions)
 }
 
 // CaptureMessage captures an arbitrary message.
 func (client *Client) CaptureMessage(message string, hint *EventHint, scope EventModifier) *EventID {
-	event := client.EventFromMessage(message, LevelInfo)
-	return client.CaptureEvent(event, hint, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // CaptureException captures an error.
 func (client *Client) CaptureException(exception error, hint *EventHint, scope EventModifier) *EventID {
-	event := client.EventFromException(exception, LevelError)
-	return client.CaptureEvent(event, hint, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // CaptureCheckIn captures a check in.
 func (client *Client) CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig, scope EventModifier) *EventID {
-	event := client.EventFromCheckIn(checkIn, monitorConfig)
-	if event != nil && event.CheckIn != nil {
-		client.CaptureEvent(event, nil, scope)
-		return &event.CheckIn.ID
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
@@ -616,88 +409,33 @@ func (client *Client) CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorCon
 // the utility methods like CaptureException. The return value is the
 // event ID. In case Sentry is disabled or event was dropped, the return value will be nil.
 func (client *Client) CaptureEvent(event *Event, hint *EventHint, scope EventModifier) *EventID {
-	return client.processEvent(event, hint, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (client *Client) captureLog(log *Log, _ *Scope) bool {
-	if log == nil {
-		return false
-	}
+func (client *Client) captureLog(log *Log, _ *Scope) bool { _ = "STUB: not implemented"; return false }
 
-	if client.options.BeforeSendLog != nil {
-		approxSize := log.ApproximateSize()
-		log = client.options.BeforeSendLog(log)
-		if log == nil {
-			debuglog.Println("Log dropped due to BeforeSendLog callback.")
-			client.reportRecorder.RecordOne(report.ReasonBeforeSend, ratelimit.CategoryLog)
-			client.reportRecorder.Record(report.ReasonBeforeSend, ratelimit.CategoryLogByte, int64(approxSize))
-			return false
-		}
-	}
-
-	if client.telemetryProcessor != nil {
-		if !client.telemetryProcessor.Add(log) {
-			debuglog.Print("Dropping log: telemetry buffer full or category missing")
-			// Note: processor tracks client report
-			return false
-		}
-	} else if client.batchLogger != nil {
-		if !client.batchLogger.Send(log) {
-			debuglog.Printf("Dropping log [%s]: buffer full", log.Level)
-			client.reportRecorder.RecordOne(report.ReasonBufferOverflow, ratelimit.CategoryLog)
-			client.reportRecorder.Record(report.ReasonBufferOverflow, ratelimit.CategoryLogByte, int64(log.ApproximateSize()))
-			return false
-		}
-	}
-
-	return true
-}
+// Note: processor tracks client report
 
 func (client *Client) captureMetric(metric *Metric, _ *Scope) bool {
-	if metric == nil {
-		return false
-	}
-
-	if client.options.BeforeSendMetric != nil {
-		metric = client.options.BeforeSendMetric(metric)
-		if metric == nil {
-			debuglog.Println("Metric dropped due to BeforeSendMetric callback.")
-			client.reportRecorder.RecordOne(report.ReasonBeforeSend, ratelimit.CategoryTraceMetric)
-			return false
-		}
-	}
-
-	if client.telemetryProcessor != nil {
-		if !client.telemetryProcessor.Add(metric) {
-			debuglog.Printf("Dropping metric: telemetry buffer full or category missing")
-			// Note: processor tracks client report
-			return false
-		}
-	} else if client.batchMeter != nil {
-		if !client.batchMeter.Send(metric) {
-			debuglog.Printf("Dropping metric %q: buffer full", metric.Name)
-			client.reportRecorder.RecordOne(report.ReasonBufferOverflow, ratelimit.CategoryTraceMetric)
-			return false
-		}
-	}
-
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
+
+// Note: processor tracks client report
 
 // Recover captures a panic.
 // Returns EventID if successfully, or nil if there's no error to recover from.
 func (client *Client) Recover(err interface{}, hint *EventHint, scope EventModifier) *EventID {
-	if err == nil {
-		err = recover()
-	}
-
-	// Normally we would not pass a nil Context, but RecoverWithContext doesn't
-	// use the Context for communicating deadline nor cancelation. All it does
-	// is store the Context in the EventHint and there nil means the Context is
-	// not available.
-	// nolint: staticcheck
-	return client.RecoverWithContext(nil, err, hint, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Normally we would not pass a nil Context, but RecoverWithContext doesn't
+// use the Context for communicating deadline nor cancelation. All it does
+// is store the Context in the EventHint and there nil means the Context is
+// not available.
+// nolint: staticcheck
 
 // RecoverWithContext captures a panic and passes relevant context object.
 // Returns EventID if successfully, or nil if there's no error to recover from.
@@ -707,32 +445,8 @@ func (client *Client) RecoverWithContext(
 	hint *EventHint,
 	scope EventModifier,
 ) *EventID {
-	if err == nil {
-		err = recover()
-	}
-	if err == nil {
-		return nil
-	}
-
-	if ctx != nil {
-		if hint == nil {
-			hint = &EventHint{}
-		}
-		if hint.Context == nil {
-			hint.Context = ctx
-		}
-	}
-
-	var event *Event
-	switch err := err.(type) {
-	case error:
-		event = client.EventFromException(err, LevelFatal)
-	case string:
-		event = client.EventFromMessage(err, LevelFatal)
-	default:
-		event = client.EventFromMessage(fmt.Sprintf("%#v", err), LevelFatal)
-	}
-	return client.CaptureEvent(event, hint, scope)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Flush waits until the underlying Transport sends any buffered events to the
@@ -746,14 +460,7 @@ func (client *Client) RecoverWithContext(
 // CaptureException or CaptureMessage. Instead, to have the SDK send events over
 // the network synchronously, configure it to use the HTTPSyncTransport in the
 // call to Init.
-func (client *Client) Flush(timeout time.Duration) bool {
-	if client.batchLogger != nil || client.batchMeter != nil || client.telemetryProcessor != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		return client.FlushWithContext(ctx)
-	}
-	return client.Transport.Flush(timeout)
-}
+func (client *Client) Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 // FlushWithContext waits until the underlying Transport sends any buffered events
 // to the Sentry server, blocking for at most the duration specified by the context.
@@ -768,289 +475,71 @@ func (client *Client) Flush(timeout time.Duration) bool {
 // configure the SDK to use HTTPSyncTransport during initialization with Init.
 
 func (client *Client) FlushWithContext(ctx context.Context) bool {
-	if client.batchLogger != nil {
-		client.batchLogger.Flush(ctx.Done())
-	}
-	if client.batchMeter != nil {
-		client.batchMeter.Flush(ctx.Done())
-	}
-	if client.telemetryProcessor != nil {
-		return client.telemetryProcessor.FlushWithContext(ctx)
-	}
-	return client.Transport.FlushWithContext(ctx)
+	_ = "STUB: not implemented"
+	return false
 }
 
 // Close clean up underlying Transport resources.
 //
 // Close should be called after Flush and before terminating the program
 // otherwise some events may be lost.
-func (client *Client) Close() {
-	if client.telemetryProcessor != nil {
-		client.telemetryProcessor.Close(5 * time.Second)
-	}
-	if client.batchLogger != nil {
-		client.batchLogger.Shutdown()
-	}
-	if client.batchMeter != nil {
-		client.batchMeter.Shutdown()
-	}
-	client.Transport.Close()
-}
+func (client *Client) Close() { _ = "STUB: not implemented"; return }
 
 // EventFromMessage creates an event from the given message string.
 func (client *Client) EventFromMessage(message string, level Level) *Event {
-	if message == "" {
-		err := usageError{fmt.Errorf("%s called with empty message", callerFunctionName())}
-		return client.EventFromException(err, level)
-	}
-	event := NewEvent()
-	event.Level = level
-	event.Message = message
-
-	if client.options.AttachStacktrace {
-		event.Threads = []Thread{{
-			Stacktrace: NewStacktrace(),
-			Crashed:    false,
-			Current:    true,
-		}}
-	}
-
-	return event
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // EventFromException creates a new Sentry event from the given `error` instance.
 func (client *Client) EventFromException(exception error, level Level) *Event {
-	event := NewEvent()
-	event.Level = level
-
-	err := exception
-	if err == nil {
-		err = usageError{fmt.Errorf("%s called with nil error", callerFunctionName())}
-	}
-
-	event.SetException(err, client.options.MaxErrorDepth)
-
-	return event
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // EventFromCheckIn creates a new Sentry event from the given `check_in` instance.
 func (client *Client) EventFromCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig) *Event {
-	if checkIn == nil {
-		return nil
-	}
-
-	event := NewEvent()
-	event.Type = checkInType
-
-	var checkInID EventID
-	if checkIn.ID == "" {
-		checkInID = EventID(uuid())
-	} else {
-		checkInID = checkIn.ID
-	}
-
-	event.CheckIn = &CheckIn{
-		ID:          checkInID,
-		MonitorSlug: checkIn.MonitorSlug,
-		Status:      checkIn.Status,
-		Duration:    checkIn.Duration,
-	}
-	event.MonitorConfig = monitorConfig
-
-	return event
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (client *Client) SetSDKIdentifier(identifier string) {
-	client.mu.Lock()
-	defer client.mu.Unlock()
+func (client *Client) SetSDKIdentifier(identifier string) { _ = "STUB: not implemented"; return }
 
-	client.sdkIdentifier = identifier
-}
-
-func (client *Client) GetSDKIdentifier() string {
-	client.mu.RLock()
-	defer client.mu.RUnlock()
-
-	return client.sdkIdentifier
-}
+func (client *Client) GetSDKIdentifier() string { _ = "STUB: not implemented"; return "" }
 
 func (client *Client) processEvent(event *Event, hint *EventHint, scope EventModifier) *EventID {
-	if event == nil {
-		err := usageError{fmt.Errorf("%s called with nil event", callerFunctionName())}
-		return client.CaptureException(err, hint, scope)
-	}
-
-	// Transactions are sampled by options.TracesSampleRate or
-	// options.TracesSampler when they are started. Other events
-	// (errors, messages) are sampled here. Does not apply to check-ins.
-	if event.Type != transactionType && event.Type != checkInType && !sample(client.options.SampleRate) {
-		debuglog.Println("Event dropped due to SampleRate hit.")
-		client.reportRecorder.RecordOne(report.ReasonSampleRate, event.toCategory())
-		return nil
-	}
-
-	if event = client.prepareEvent(event, hint, scope); event == nil {
-		return nil
-	}
-
-	// Apply beforeSend* processors
-	if hint == nil {
-		hint = &EventHint{}
-	}
-	switch event.Type {
-	case transactionType:
-		if client.options.BeforeSendTransaction != nil {
-			spanCountBefore := event.GetSpanCount()
-			event = client.options.BeforeSendTransaction(event, hint)
-			if event == nil {
-				debuglog.Println("Transaction dropped due to BeforeSendTransaction callback.")
-				client.reportRecorder.RecordOne(report.ReasonBeforeSend, ratelimit.CategoryTransaction)
-				client.reportRecorder.Record(report.ReasonBeforeSend, ratelimit.CategorySpan, int64(spanCountBefore))
-				return nil
-			}
-			// Track spans removed by the callback
-			if droppedSpans := spanCountBefore - event.GetSpanCount(); droppedSpans > 0 {
-				client.reportRecorder.Record(report.ReasonBeforeSend, ratelimit.CategorySpan, int64(droppedSpans))
-			}
-		}
-	case checkInType: // not a default case, since we shouldn't apply BeforeSend on check-in events
-	default:
-		if client.options.BeforeSend != nil {
-			if event = client.options.BeforeSend(event, hint); event == nil {
-				debuglog.Println("Event dropped due to BeforeSend callback.")
-				client.reportRecorder.RecordOne(report.ReasonBeforeSend, ratelimit.CategoryError)
-				return nil
-			}
-		}
-	}
-
-	if client.telemetryProcessor != nil {
-		if !client.telemetryProcessor.Add(event) {
-			debuglog.Println("Event dropped: telemetry buffer full or unavailable")
-		}
-	} else {
-		client.Transport.SendEvent(event)
-	}
-
-	return &event.EventID
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Transactions are sampled by options.TracesSampleRate or
+// options.TracesSampler when they are started. Other events
+// (errors, messages) are sampled here. Does not apply to check-ins.
+
+// Apply beforeSend* processors
+
+// Track spans removed by the callback
+
+// not a default case, since we shouldn't apply BeforeSend on check-in events
 
 func (client *Client) prepareEvent(event *Event, hint *EventHint, scope EventModifier) *Event {
-	if event.EventID == "" {
-		// TODO set EventID when the event is created, same as in other SDKs. It's necessary for profileTransaction.ID.
-		event.EventID = EventID(uuid())
-	}
+	_ = "STUB: not implemented"
+	return nil
 
-	if event.Timestamp.IsZero() {
-		event.Timestamp = time.Now()
-	}
-
-	if event.Level == "" {
-		event.Level = LevelInfo
-	}
-
-	if event.ServerName == "" {
-		event.ServerName = client.options.ServerName
-
-		if event.ServerName == "" {
-			event.ServerName = hostname
-		}
-	}
-
-	if event.Release == "" {
-		event.Release = client.options.Release
-	}
-
-	if event.Dist == "" {
-		event.Dist = client.options.Dist
-	}
-
-	if event.Environment == "" {
-		event.Environment = client.options.Environment
-	}
-
-	event.Platform = "go"
-	event.Sdk = SdkInfo{
-		Name:         client.GetSDKIdentifier(),
-		Version:      SDKVersion,
-		Integrations: client.listIntegrations(),
-		Packages: []SdkPackage{{
-			Name:    "sentry-go",
-			Version: SDKVersion,
-		}},
-	}
-
-	if scope != nil {
-		event = scope.ApplyToEvent(event, hint, client)
-		if event == nil {
-			return nil
-		}
-	}
-
-	for _, processor := range client.eventProcessors {
-		id := event.EventID
-		category := event.toCategory()
-		spanCountBefore := event.GetSpanCount()
-		event = processor(event, hint)
-		if event == nil {
-			debuglog.Printf("Event dropped by one of the Client EventProcessors: %s\n", id)
-			client.reportRecorder.RecordOne(report.ReasonEventProcessor, category)
-			if category == ratelimit.CategoryTransaction {
-				client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(spanCountBefore))
-			}
-			return nil
-		}
-		// Track spans removed by the processor
-		if category == ratelimit.CategoryTransaction {
-			if droppedSpans := spanCountBefore - event.GetSpanCount(); droppedSpans > 0 {
-				client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(droppedSpans))
-			}
-		}
-	}
-
-	for _, processor := range globalEventProcessors {
-		id := event.EventID
-		category := event.toCategory()
-		spanCountBefore := event.GetSpanCount()
-		event = processor(event, hint)
-		if event == nil {
-			debuglog.Printf("Event dropped by one of the Global EventProcessors: %s\n", id)
-			client.reportRecorder.RecordOne(report.ReasonEventProcessor, category)
-			if category == ratelimit.CategoryTransaction {
-				client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(spanCountBefore))
-			}
-			return nil
-		}
-		// Track spans removed by the processor
-		if category == ratelimit.CategoryTransaction {
-			if droppedSpans := spanCountBefore - event.GetSpanCount(); droppedSpans > 0 {
-				client.reportRecorder.Record(report.ReasonEventProcessor, ratelimit.CategorySpan, int64(droppedSpans))
-			}
-		}
-	}
-
-	return event
+	// TODO set EventID when the event is created, same as in other SDKs. It's necessary for profileTransaction.ID.
 }
 
-func (client *Client) listIntegrations() []string {
-	integrations := make([]string, len(client.integrations))
-	for i, integration := range client.integrations {
-		integrations[i] = integration.Name()
-	}
-	return integrations
-}
+// Track spans removed by the processor
+
+// Track spans removed by the processor
+
+func (client *Client) listIntegrations() []string { _ = "STUB: not implemented"; return nil }
 
 func (client *Client) integrationAlreadyInstalled(name string) bool {
-	for _, integration := range client.integrations {
-		if integration.Name() == name {
-			return true
-		}
-	}
+	_ = "STUB: not implemented"
 	return false
 }
 
 // sample returns true with the given probability, which must be in the range
 // [0.0, 1.0].
-func sample(probability float64) bool {
-	return rng.Float64() < probability
-}
+func sample(probability float64) bool { _ = "STUB: not implemented"; return false }

@@ -54,8 +54,8 @@ type MyHandler struct {
 // To correlate logs with transactions, [context.Context] needs to be passed to the [LogEntry] with the [WithCtx] func.
 // Assuming you are using a Sentry tracing integration.
 func (h MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	_ = "STUB: not implemented"
+
 	// By using [WithCtx] the log entry will be associated with the transaction from the request
-	h.logger.Info().WithCtx(ctx).Emit("log inside handler")
-	w.WriteHeader(http.StatusOK)
+	return
 }

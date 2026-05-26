@@ -3,15 +3,9 @@ package sentrylogrus
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/attribute"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 	"github.com/sirupsen/logrus"
 )
 
@@ -88,14 +82,16 @@ type Hook interface {
 // using sentry.CaptureException instead of being converted from log entries.
 // Use [NewLogHook] for structured logging. Will be removed in 0.48.0.
 func New(levels []logrus.Level, opts sentry.ClientOptions) (Hook, error) {
-	return NewEventHook(levels, opts)
+	_ = "STUB: not implemented"
+	return *new(Hook), nil
 }
 
 // Deprecated: NewFromClient creates issues/events from log entries. Errors should only be
 // captured using sentry.CaptureException instead of being converted from log entries.
 // Use [NewLogHookFromClient] for structured logging. Will be removed in 0.48.0.
 func NewFromClient(levels []logrus.Level, client *sentry.Client) Hook {
-	return NewEventHookFromClient(levels, client)
+	_ = "STUB: not implemented"
+	return *new(Hook)
 }
 
 // A FallbackFunc can be used to attempt to handle any errors in logging, before
@@ -112,159 +108,49 @@ type eventHook struct {
 var _ Hook = &eventHook{}
 var _ logrus.Hook = &eventHook{} // eventHook still needs to be a logrus.Hook
 
-func (h *eventHook) SetHubProvider(provider func() *sentry.Hub) {
-	h.hubProvider = provider
-}
+func (h *eventHook) SetHubProvider(provider func() *sentry.Hub) { _ = "STUB: not implemented"; return }
 
-func (h *eventHook) AddTags(tags map[string]string) {
-	h.hubProvider().Scope().SetTags(tags)
-}
+func (h *eventHook) AddTags(tags map[string]string) { _ = "STUB: not implemented"; return }
 
-func (h *eventHook) SetFallback(fb FallbackFunc) {
-	h.fallback = fb
-}
+func (h *eventHook) SetFallback(fb FallbackFunc) { _ = "STUB: not implemented"; return }
 
-func (h *eventHook) SetKey(oldKey, newKey string) {
-	if oldKey == "" {
-		return
-	}
-	if newKey == "" {
-		delete(h.keys, oldKey)
-		return
-	}
-	delete(h.keys, newKey)
-	h.keys[oldKey] = newKey
-}
+func (h *eventHook) SetKey(oldKey, newKey string) { _ = "STUB: not implemented"; return }
 
-func (h *eventHook) key(key string) string {
-	if val := h.keys[key]; val != "" {
-		return val
-	}
-	return key
-}
+func (h *eventHook) key(key string) string { _ = "STUB: not implemented"; return "" }
 
-func (h *eventHook) Levels() []logrus.Level {
-	return h.levels
-}
+func (h *eventHook) Levels() []logrus.Level { _ = "STUB: not implemented"; return nil }
 
-func (h *eventHook) Fire(entry *logrus.Entry) error {
-	hub := h.hubProvider()
-	event := h.entryToEvent(entry)
-	var hint *sentry.EventHint
-	if entry.Context != nil {
-		hint = &sentry.EventHint{Context: entry.Context}
-	}
-	if hub.CaptureEventWithHint(event, hint) == nil {
-		if h.fallback != nil {
-			return h.fallback(entry)
-		}
-		return errors.New("failed to send to sentry")
-	}
+func (h *eventHook) Fire(entry *logrus.Entry) error { _ = "STUB: not implemented"; return nil }
+
+func (h *eventHook) entryToEvent(l *logrus.Entry) *sentry.Event {
+	_ = "STUB: not implemented"
 	return nil
 }
 
-func (h *eventHook) entryToEvent(l *logrus.Entry) *sentry.Event {
-	extra := make(logrus.Fields, len(l.Data))
-	for k, v := range l.Data {
-		extra[k] = v
-	}
-	s := sentry.NewEvent()
-	s.Level = levelMap[l.Level]
-	s.Message = l.Message
-	s.Timestamp = l.Time
-	s.Logger = name
-
-	key := h.key(FieldRequest)
-	switch request := extra[key].(type) {
-	case *http.Request:
-		delete(extra, key)
-		s.Request = sentry.NewRequest(request)
-	case sentry.Request:
-		delete(extra, key)
-		s.Request = &request
-	case *sentry.Request:
-		delete(extra, key)
-		s.Request = request
-	}
-
-	if err, ok := extra[logrus.ErrorKey].(error); ok {
-		delete(extra, logrus.ErrorKey)
-
-		errorDepth := maxErrorDepth
-		if hub := h.hubProvider(); hub != nil {
-			if client := hub.Client(); client != nil {
-				errorDepth = client.Options().MaxErrorDepth
-			}
-		}
-		s.SetException(err, errorDepth)
-	}
-
-	key = h.key(FieldUser)
-	switch user := extra[key].(type) {
-	case sentry.User:
-		delete(extra, key)
-		s.User = user
-	case *sentry.User:
-		delete(extra, key)
-		s.User = *user
-	}
-
-	key = h.key(FieldTransaction)
-	if txn, ok := extra[key].(string); ok {
-		delete(extra, key)
-		s.Transaction = txn
-	}
-
-	key = h.key(FieldFingerprint)
-	if fp, ok := extra[key].([]string); ok {
-		delete(extra, key)
-		s.Fingerprint = fp
-	}
-
-	delete(extra, FieldGoVersion)
-	delete(extra, FieldMaxProcs)
-
-	for key, value := range extra {
-		s.Tags[key] = fmt.Sprint(value)
-	}
-	return s
-}
-
-func (h *eventHook) Flush(timeout time.Duration) bool {
-	return h.hubProvider().Client().Flush(timeout)
-}
+func (h *eventHook) Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 func (h *eventHook) FlushWithContext(ctx context.Context) bool {
-	return h.hubProvider().Client().FlushWithContext(ctx)
+	_ = "STUB: not implemented"
+	return false
 }
 
 // Deprecated: NewEventHook creates issues/events from log entries. Errors should only be
 // captured using sentry.CaptureException instead of being converted from log entries.
 // Use [NewLogHook] for structured logging. Will be removed in 0.48.0.
 func NewEventHook(levels []logrus.Level, opts sentry.ClientOptions) (Hook, error) {
-	client, err := sentry.NewClient(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	client.SetSDKIdentifier(sdkIdentifier)
-	return NewEventHookFromClient(levels, client), nil
+	_ = "STUB: not implemented"
+	return *new(Hook), nil
 }
 
 // Deprecated: NewEventHookFromClient creates issues/events from log entries. Errors should
 // only be captured using sentry.CaptureException instead of being converted from log
 // entries. Use [NewLogHookFromClient] for structured logging. Will be removed in 0.48.0.
 func NewEventHookFromClient(levels []logrus.Level, client *sentry.Client) Hook {
-	defaultHub := sentry.NewHub(client, sentry.NewScope())
-	return &eventHook{
-		levels: levels,
-		hubProvider: func() *sentry.Hub {
-			// Default to using the same hub if no specific provider is set
-			return defaultHub
-		},
-		keys: make(map[string]string),
-	}
+	_ = "STUB: not implemented"
+	return *new(Hook)
 }
+
+// Default to using the same hub if no specific provider is set
 
 type logHook struct {
 	hubProvider func() *sentry.Hub
@@ -277,39 +163,19 @@ type logHook struct {
 var _ Hook = &logHook{}
 var _ logrus.Hook = &logHook{} // logHook also needs to be a logrus.Hook
 
-func (h *logHook) SetHubProvider(provider func() *sentry.Hub) {
-	h.hubProvider = provider
-}
+func (h *logHook) SetHubProvider(provider func() *sentry.Hub) { _ = "STUB: not implemented"; return }
 
 func (h *logHook) AddTags(tags map[string]string) {
+	_ = "STUB: not implemented"
 	// for logs convert tags to attributes
-	for k, v := range tags {
-		h.logger.SetAttributes(attribute.String(k, v))
-	}
+	return
 }
 
-func (h *logHook) SetFallback(fb FallbackFunc) {
-	h.fallback = fb
-}
+func (h *logHook) SetFallback(fb FallbackFunc) { _ = "STUB: not implemented"; return }
 
-func (h *logHook) SetKey(oldKey, newKey string) {
-	if oldKey == "" {
-		return
-	}
-	if newKey == "" {
-		delete(h.keys, oldKey)
-		return
-	}
-	delete(h.keys, newKey)
-	h.keys[oldKey] = newKey
-}
+func (h *logHook) SetKey(oldKey, newKey string) { _ = "STUB: not implemented"; return }
 
-func (h *logHook) key(key string) string {
-	if val := h.keys[key]; val != "" {
-		return val
-	}
-	return key
-}
+func (h *logHook) key(key string) string { _ = "STUB: not implemented"; return "" }
 
 // uint64LogEntry is used to pass uint64 values without conversion.
 // The concrete sentry.logEntry type satisfies this interface,
@@ -319,132 +185,43 @@ type uint64LogEntry interface {
 }
 
 func logrusFieldToLogEntry(logEntry sentry.LogEntry, key string, value interface{}) sentry.LogEntry {
-	switch val := value.(type) {
-	case int8:
-		return logEntry.Int64(key, int64(val))
-	case int16:
-		return logEntry.Int64(key, int64(val))
-	case int32:
-		return logEntry.Int64(key, int64(val))
-	case int64:
-		return logEntry.Int64(key, val)
-	case int:
-		return logEntry.Int64(key, int64(val))
-	case uint, uint8, uint16, uint32, uint64:
-		uval := reflect.ValueOf(val).Convert(reflect.TypeOf(uint64(0))).Uint()
-		if e, ok := logEntry.(uint64LogEntry); ok {
-			return e.Uint64(key, uval)
-		}
-		debuglog.Println("Internal error: log entry does not implement unsigned int conversion")
-		return logEntry
-	case string:
-		return logEntry.String(key, val)
-	case float32:
-		return logEntry.Float64(key, float64(val))
-	case float64:
-		return logEntry.Float64(key, val)
-	case bool:
-		return logEntry.Bool(key, val)
-	case time.Time:
-		return logEntry.String(key, val.Format(time.RFC3339))
-	case time.Duration:
-		return logEntry.String(key, val.String())
-	default:
-		// Fallback to string conversion for unknown types
-		return logEntry.String(key, fmt.Sprint(value))
-	}
+	_ = "STUB: not implemented"
+	return *new(sentry.LogEntry)
 }
 
-func (h *logHook) Fire(entry *logrus.Entry) error {
-	ctx := context.Background()
-	if entry.Context != nil {
-		ctx = entry.Context
-	}
+// Fallback to string conversion for unknown types
 
-	// Create the base log entry for the appropriate level
-	var logEntry sentry.LogEntry
-	switch entry.Level {
-	case logrus.TraceLevel:
-		logEntry = h.logger.Trace().WithCtx(ctx)
-	case logrus.DebugLevel:
-		logEntry = h.logger.Debug().WithCtx(ctx)
-	case logrus.InfoLevel:
-		logEntry = h.logger.Info().WithCtx(ctx)
-	case logrus.WarnLevel:
-		logEntry = h.logger.Warn().WithCtx(ctx)
-	case logrus.ErrorLevel:
-		logEntry = h.logger.Error().WithCtx(ctx)
-	case logrus.FatalLevel:
-		logEntry = h.logger.Fatal().WithCtx(ctx)
-	case logrus.PanicLevel:
-		logEntry = h.logger.Panic().WithCtx(ctx)
-	default:
-		debuglog.Printf("Invalid logrus logging level: %v. Dropping log.", entry.Level)
-		if h.fallback != nil {
-			return h.fallback(entry)
-		}
-		return errors.New("invalid log level")
-	}
+func (h *logHook) Fire(entry *logrus.Entry) error { _ = "STUB: not implemented"; return nil }
 
-	// Add all the fields as attributes to this specific log entry
-	for k, v := range entry.Data {
-		// Skip specific fields that might be handled separately
-		if k == h.key(FieldRequest) || k == h.key(FieldUser) ||
-			k == h.key(FieldFingerprint) || k == FieldGoVersion ||
-			k == FieldMaxProcs || k == logrus.ErrorKey {
-			continue
-		}
+// Create the base log entry for the appropriate level
 
-		logEntry = logrusFieldToLogEntry(logEntry, k, v)
-	}
+// Add all the fields as attributes to this specific log entry
 
-	// Emit the log entry with the message
-	logEntry.Emit(entry.Message)
-	return nil
-}
+// Skip specific fields that might be handled separately
 
-func (h *logHook) Levels() []logrus.Level {
-	return h.levels
-}
+// Emit the log entry with the message
 
-func (h *logHook) Flush(timeout time.Duration) bool {
-	return h.hubProvider().Client().Flush(timeout)
-}
+func (h *logHook) Levels() []logrus.Level { _ = "STUB: not implemented"; return nil }
+
+func (h *logHook) Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 func (h *logHook) FlushWithContext(ctx context.Context) bool {
-	return h.hubProvider().Client().FlushWithContext(ctx)
+	_ = "STUB: not implemented"
+	return false
 }
 
 // NewLogHook initializes a new Logrus hook which sends logs to a new Sentry client
 // configured according to opts.
 func NewLogHook(levels []logrus.Level, opts sentry.ClientOptions) (Hook, error) {
-	if opts.DisableLogs {
-		return nil, errors.New("cannot create log hook, DisableLogs is set to true")
-	}
-	client, err := sentry.NewClient(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	client.SetSDKIdentifier(sdkIdentifier)
-	return NewLogHookFromClient(levels, client), nil
+	_ = "STUB: not implemented"
+	return *new(Hook), nil
 }
 
 // NewLogHookFromClient initializes a new Logrus hook which sends logs to the provided
 // sentry client.
 func NewLogHookFromClient(levels []logrus.Level, client *sentry.Client) Hook {
-	defaultHub := sentry.NewHub(client, sentry.NewScope())
-	ctx := sentry.SetHubOnContext(context.Background(), defaultHub)
-	logger := sentry.NewLogger(ctx)
-	logger.SetAttributes(attribute.String("sentry.origin", LogrusOrigin))
-
-	return &logHook{
-		logger: logger,
-		levels: levels,
-		hubProvider: func() *sentry.Hub {
-			// Default to using the same hub if no specific provider is set
-			return defaultHub
-		},
-		keys: make(map[string]string),
-	}
+	_ = "STUB: not implemented"
+	return *new(Hook)
 }
+
+// Default to using the same hub if no specific provider is set

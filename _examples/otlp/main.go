@@ -21,7 +21,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentryotel "github.com/getsentry/sentry-go/otel"
-	sentryotlp "github.com/getsentry/sentry-go/otel/otlp"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -84,12 +83,6 @@ func main() {
 
 // setupTracerProviderWithSentry sends spans directly to Sentry's OTLP endpoint.
 func setupTracerProviderWithSentry(ctx context.Context, dsn string) (*sdktrace.TracerProvider, error) {
-	exporter, err := sentryotlp.NewTraceExporter(ctx, dsn)
-	if err != nil {
-		return nil, fmt.Errorf("sentryotlp.NewTraceExporter: %w", err)
-	}
-
-	return sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-	), nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }

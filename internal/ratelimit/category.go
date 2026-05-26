@@ -1,12 +1,5 @@
 package ratelimit
 
-import (
-	"strings"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-)
-
 // Reference:
 // https://github.com/getsentry/relay/blob/46dfaa850b8717a6e22c3e9a275ba17fe673b9da/relay-base-schema/src/data_category.rs#L231-L271
 
@@ -39,34 +32,9 @@ var knownCategories = map[Category]struct{}{
 }
 
 // String returns the category formatted for debugging.
-func (c Category) String() string {
-	switch c {
-	case CategoryAll:
-		return "CategoryAll"
-	case CategoryError:
-		return "CategoryError"
-	case CategoryTransaction:
-		return "CategoryTransaction"
-	case CategorySpan:
-		return "CategorySpan"
-	case CategoryLog:
-		return "CategoryLog"
-	case CategoryLogByte:
-		return "CategoryLogByte"
-	case CategoryMonitor:
-		return "CategoryMonitor"
-	case CategoryTraceMetric:
-		return "CategoryTraceMetric"
-	default:
-		// For unknown categories, use the original formatting logic
-		caser := cases.Title(language.English)
-		rv := "Category"
-		for _, w := range strings.Fields(string(c)) {
-			rv += caser.String(w)
-		}
-		return rv
-	}
-}
+func (c Category) String() string { _ = "STUB: not implemented"; return "" }
+
+// For unknown categories, use the original formatting logic
 
 // Priority represents the importance level of a category for buffer management.
 type Priority int
@@ -79,37 +47,7 @@ const (
 	PriorityLowest
 )
 
-func (p Priority) String() string {
-	switch p {
-	case PriorityCritical:
-		return "critical"
-	case PriorityHigh:
-		return "high"
-	case PriorityMedium:
-		return "medium"
-	case PriorityLow:
-		return "low"
-	case PriorityLowest:
-		return "lowest"
-	default:
-		return "unknown"
-	}
-}
+func (p Priority) String() string { _ = "STUB: not implemented"; return "" }
 
 // GetPriority returns the priority level for this category.
-func (c Category) GetPriority() Priority {
-	switch c {
-	case CategoryError:
-		return PriorityCritical
-	case CategoryMonitor:
-		return PriorityHigh
-	case CategoryLog:
-		return PriorityLow
-	case CategoryTransaction:
-		return PriorityMedium
-	case CategoryTraceMetric:
-		return PriorityLow
-	default:
-		return PriorityMedium
-	}
-}
+func (c Category) GetPriority() Priority { _ = "STUB: not implemented"; return *new(Priority) }

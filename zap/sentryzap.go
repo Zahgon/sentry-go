@@ -3,11 +3,9 @@ package sentryzap
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/attribute"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -45,30 +43,8 @@ type SentryCore struct {
 
 // NewSentryCore creates a new zapcore.Core that sends logs to Sentry.
 func NewSentryCore(ctx context.Context, opts Option) *SentryCore {
-	if opts.Level == nil {
-		opts.Level = []zapcore.Level{
-			zapcore.DebugLevel,
-			zapcore.InfoLevel,
-			zapcore.WarnLevel,
-			zapcore.ErrorLevel,
-			zapcore.DPanicLevel,
-			zapcore.PanicLevel,
-			zapcore.FatalLevel,
-		}
-	}
-	if opts.FlushTimeout == 0 {
-		opts.FlushTimeout = 5 * time.Second
-	}
-
-	logger := sentry.NewLogger(ctx)
-	logger.SetAttributes(attribute.String("sentry.origin", ZapOrigin))
-
-	return &SentryCore{
-		option: opts,
-		logger: logger,
-		fields: []zapcore.Field{},
-		ctx:    ctx,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Context returns a zapcore.Field that can be used with logger.With() to link
@@ -81,127 +57,44 @@ func NewSentryCore(ctx context.Context, opts Option) *SentryCore {
 //	logger = logger.With(sentryzap.Context(requestCtx))
 //	logger.Info("handling request") // This log will be linked to the trace in requestCtx
 func Context(ctx context.Context) zapcore.Field {
-	return zapcore.Field{
-		Key:       "_sentry_context",
-		Type:      zapcore.SkipType,
-		Interface: ctx,
-	}
+	_ = "STUB: not implemented"
+	return *new(zapcore.Field)
 }
 
 // Enabled returns true if the given level is in the configured Level list.
-func (c *SentryCore) Enabled(level zapcore.Level) bool {
-	for _, l := range c.option.Level {
-		if l == level {
-			return true
-		}
-	}
-	return false
-}
+func (c *SentryCore) Enabled(level zapcore.Level) bool { _ = "STUB: not implemented"; return false }
 
 // With returns a new Core with the given fields added to the context.
 func (c *SentryCore) With(fields []zapcore.Field) zapcore.Core {
-	newCtx := c.ctx
-	var filteredFields []zapcore.Field
-
-	for _, field := range fields {
-		if field.Key == "_sentry_context" && field.Type == zapcore.SkipType {
-			if ctx, ok := field.Interface.(context.Context); ok {
-				newCtx = ctx
-				continue
-			}
-		}
-		filteredFields = append(filteredFields, field)
-	}
-
-	newFields := make([]zapcore.Field, len(c.fields), len(c.fields)+len(filteredFields))
-	copy(newFields, c.fields)
-	newFields = append(newFields, filteredFields...)
-
-	return &SentryCore{
-		option: c.option,
-		logger: c.logger,
-		fields: newFields,
-		ctx:    newCtx,
-	}
+	_ = "STUB: not implemented"
+	return *new(zapcore.Core)
 }
 
 // Check determines whether the supplied Entry should be logged.
 func (c *SentryCore) Check(entry zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if c.Enabled(entry.Level) {
-		return ce.AddCore(entry, c)
-	}
-	return ce
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Write serializes the Entry and any Fields and sends them to Sentry.
 func (c *SentryCore) Write(entry zapcore.Entry, fields []zapcore.Field) error {
-	logEntry := c.getLogEntry(c.ctx, entry.Level)
-	if logEntry == nil {
-		return nil
-	}
-
-	if c.option.AddCaller && entry.Caller.Defined {
-		logEntry = logEntry.String("code.filepath", entry.Caller.File)
-		logEntry = logEntry.Int("code.lineno", entry.Caller.Line)
-		if entry.Caller.Function != "" {
-			logEntry = logEntry.String("code.function", entry.Caller.Function)
-		}
-	}
-	if entry.LoggerName != "" {
-		logEntry = logEntry.String("logger.name", entry.LoggerName)
-	}
-	if entry.Stack != "" {
-		logEntry = logEntry.String("exception.stacktrace", entry.Stack)
-	}
-
-	// Convert and add accumulated fields from With()
-	for _, field := range c.fields {
-		logEntry = zapFieldToLogEntry(logEntry, field)
-	}
-	// Convert and add fields from this specific log call
-	for _, field := range fields {
-		logEntry = zapFieldToLogEntry(logEntry, field)
-	}
-	logEntry.Emit(entry.Message)
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// Convert and add accumulated fields from With()
+
+// Convert and add fields from this specific log call
 
 // Sync flushes any buffered log entries to Sentry.
-func (c *SentryCore) Sync() error {
-	hub := sentry.GetHubFromContext(c.ctx)
-	if hub == nil {
-		hub = sentry.CurrentHub()
-	}
-	if ok := hub.Flush(c.option.FlushTimeout); !ok {
-		return fmt.Errorf("failed to flush client: %v", hub.Client())
-	}
-	return nil
-}
+func (c *SentryCore) Sync() error { _ = "STUB: not implemented"; return nil }
 
 // getLogEntry returns the appropriate sentry.LogEntry for the given zap level.
 func (c *SentryCore) getLogEntry(ctx context.Context, level zapcore.Level) sentry.LogEntry {
-	var logEntry sentry.LogEntry
-
-	switch level {
-	case zapcore.DebugLevel:
-		logEntry = c.logger.Debug()
-	case zapcore.InfoLevel:
-		logEntry = c.logger.Info()
-	case zapcore.WarnLevel:
-		logEntry = c.logger.Warn()
-	case zapcore.ErrorLevel:
-		logEntry = c.logger.Error()
-	case zapcore.DPanicLevel:
-		// DPanic is treated as Error in production
-		logEntry = c.logger.Error()
-	case zapcore.PanicLevel:
-		logEntry = c.logger.LFatal()
-	case zapcore.FatalLevel:
-		logEntry = c.logger.LFatal()
-	default:
-		// For any other level, use Info
-		logEntry = c.logger.Info()
-	}
-
-	return logEntry.WithCtx(ctx)
+	_ = "STUB: not implemented"
+	return *new(sentry.LogEntry)
 }
+
+// DPanic is treated as Error in production
+
+// For any other level, use Info

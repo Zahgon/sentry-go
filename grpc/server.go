@@ -5,14 +5,12 @@ package sentrygrpc
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -32,180 +30,48 @@ type ServerOptions struct {
 	Timeout time.Duration
 }
 
-func (o *ServerOptions) setDefaults() {
-	if o.Timeout == 0 {
-		o.Timeout = sentry.DefaultFlushTimeout
-	}
-}
+func (o *ServerOptions) setDefaults() { _ = "STUB: not implemented"; return }
 
 func recoverWithSentry(ctx context.Context, hub *sentry.Hub, o ServerOptions, onRecover func()) {
-	if r := recover(); r != nil {
-		eventID := hub.RecoverWithContext(ctx, r)
-
-		if onRecover != nil {
-			onRecover()
-		}
-
-		if eventID != nil && o.WaitForDelivery {
-			hub.Flush(o.Timeout)
-		}
-
-		if o.Repanic {
-			panic(r)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
-func hubFromServerContext(ctx context.Context) *sentry.Hub {
-	hub := sentry.GetHubFromContext(ctx)
-	if hub == nil {
-		hub = sentry.CurrentHub().Clone()
-	}
-
-	if client := hub.Client(); client != nil {
-		client.SetSDKIdentifier(sdkIdentifier)
-	}
-
-	return hub
-}
+func hubFromServerContext(ctx context.Context) *sentry.Hub { _ = "STUB: not implemented"; return nil }
 
 func traceHeadersFromContext(ctx context.Context) (metadata.MD, string, string) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	return md, getFirstHeader(md, sentry.SentryTraceHeader), getFirstHeader(md, sentry.SentryBaggageHeader)
+	_ = "STUB: not implemented"
+	return *new(metadata.MD), "", ""
 }
 
 func startServerTransaction(ctx context.Context, fullMethod string) (context.Context, *sentry.Hub, *sentry.Span) {
-	hub := hubFromServerContext(ctx)
-	md, sentryTraceHeader, sentryBaggageHeader := traceHeadersFromContext(ctx)
-	name, service, method := parseGRPCMethod(fullMethod)
-
-	setScopeMetadata(hub, name, md)
-
-	transaction := sentry.StartTransaction(
-		sentry.SetHubOnContext(ctx, hub),
-		name,
-		sentry.ContinueTrace(hub, sentryTraceHeader, sentryBaggageHeader),
-		sentry.WithOpName(defaultServerOperationName),
-		sentry.WithDescription(name),
-		sentry.WithTransactionSource(sentry.SourceRoute),
-		sentry.WithSpanOrigin(sentry.SpanOriginGrpc),
-	)
-	if service != "" {
-		transaction.SetData("rpc.service", service)
-	}
-	if method != "" {
-		transaction.SetData("rpc.method", method)
-	}
-	transaction.SetData("rpc.system", "grpc")
-
-	return transaction.Context(), hub, transaction
+	_ = "STUB: not implemented"
+	return *new(context.Context), nil, nil
 }
 
-func setRPCStatus(span *sentry.Span, err error) {
-	code := grpcStatusCode(err)
-	span.Status = toSpanStatus(code)
-	span.SetData("rpc.grpc.status_code", int(code))
-}
+func setRPCStatus(span *sentry.Span, err error) { _ = "STUB: not implemented"; return }
 
-func grpcStatusCode(err error) codes.Code {
-	if err == nil {
-		return codes.OK
-	}
-
-	if s, ok := status.FromError(err); ok {
-		return s.Code()
-	}
-
-	return status.FromContextError(err).Code()
-}
+func grpcStatusCode(err error) codes.Code { _ = "STUB: not implemented"; return *new(codes.Code) }
 
 func UnaryServerInterceptor(opts ServerOptions) grpc.UnaryServerInterceptor {
-	opts.setDefaults()
-
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-		ctx, hub, transaction := startServerTransaction(ctx, info.FullMethod)
-		defer transaction.Finish()
-
-		defer recoverWithSentry(ctx, hub, opts, func() {
-			err = status.Error(codes.Internal, internalServerErrorMessage)
-			setRPCStatus(transaction, err)
-		})
-
-		resp, err = handler(ctx, req)
-		setRPCStatus(transaction, err)
-
-		return resp, err
-	}
+	_ = "STUB: not implemented"
+	return *new(grpc.UnaryServerInterceptor)
 }
 
 // StreamServerInterceptor provides Sentry integration for streaming gRPC calls.
 func StreamServerInterceptor(opts ServerOptions) grpc.StreamServerInterceptor {
-	opts.setDefaults()
-	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
-		ctx, hub, transaction := startServerTransaction(ss.Context(), info.FullMethod)
-		defer transaction.Finish()
-
-		stream := wrapServerStream(ctx, ss)
-
-		defer recoverWithSentry(ctx, hub, opts, func() {
-			err = status.Error(codes.Internal, internalServerErrorMessage)
-			setRPCStatus(transaction, err)
-		})
-
-		err = handler(srv, stream)
-		setRPCStatus(transaction, err)
-
-		return err
-	}
+	_ = "STUB: not implemented"
+	return *new(grpc.StreamServerInterceptor)
 }
 
-func getFirstHeader(md metadata.MD, key string) string {
-	if values := md.Get(key); len(values) > 0 {
-		return values[0]
-	}
-	return ""
-}
+func getFirstHeader(md metadata.MD, key string) string { _ = "STUB: not implemented"; return "" }
 
 func setScopeMetadata(hub *sentry.Hub, method string, md metadata.MD) {
-	hub.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetContext("grpc", sentry.Context{
-			"method":   method,
-			"metadata": metadataToContext(md),
-		})
-	})
+	_ = "STUB: not implemented"
+	return
 }
 
-func metadataToContext(md metadata.MD) map[string]any {
-	if len(md) == 0 {
-		return nil
-	}
-
-	ctx := make(map[string]any, len(md))
-	for key, values := range md {
-		if sentry.IsSensitiveHeader(key) {
-			continue
-		}
-
-		if len(values) == 0 {
-			continue
-		}
-
-		if len(values) == 1 {
-			ctx[key] = values[0]
-			continue
-		}
-
-		copied := make([]string, len(values))
-		copy(copied, values)
-		ctx[key] = copied
-	}
-
-	if len(ctx) == 0 {
-		return nil
-	}
-
-	return ctx
-}
+func metadataToContext(md metadata.MD) map[string]any { _ = "STUB: not implemented"; return nil }
 
 // parseGRPCMethod parses a gRPC full method name and returns the span name, service, and method components.
 //
@@ -214,20 +80,14 @@ func metadataToContext(md metadata.MD) map[string]any {
 //
 // Returns the original string as name and empty service/method if the format is invalid.
 func parseGRPCMethod(fullMethod string) (name, service, method string) {
-	if !strings.HasPrefix(fullMethod, "/") {
-		return fullMethod, "", ""
-	}
-	name = fullMethod[1:]
-	pos := strings.Index(name, "/")
-	if pos < 0 {
-		return name, "", ""
-	}
-	return name, name[:pos], name[pos+1:]
+	_ = "STUB: not implemented"
+	return "", "", ""
 }
 
 // wrapServerStream wraps a grpc.ServerStream, allowing you to inject a custom context.
 func wrapServerStream(ctx context.Context, ss grpc.ServerStream) grpc.ServerStream {
-	return &wrappedServerStream{ServerStream: ss, ctx: ctx}
+	_ = "STUB: not implemented"
+	return *new(grpc.ServerStream)
 }
 
 // wrappedServerStream is a wrapper around grpc.ServerStream that overrides the Context method.
@@ -238,7 +98,8 @@ type wrappedServerStream struct {
 
 // Context returns the custom context for the stream.
 func (w *wrappedServerStream) Context() context.Context {
-	return w.ctx
+	_ = "STUB: not implemented"
+	return *new(context.Context)
 }
 
 var codeToSpanStatus = map[codes.Code]sentry.SpanStatus{
@@ -262,8 +123,6 @@ var codeToSpanStatus = map[codes.Code]sentry.SpanStatus{
 }
 
 func toSpanStatus(code codes.Code) sentry.SpanStatus {
-	if spanStatus, ok := codeToSpanStatus[code]; ok {
-		return spanStatus
-	}
-	return sentry.SpanStatusUndefined
+	_ = "STUB: not implemented"
+	return *new(sentry.SpanStatus)
 }

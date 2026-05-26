@@ -1,33 +1,26 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 )
 
-func prettyPrint(v interface{}) string {
-	pp, _ := json.MarshalIndent(v, "", "  ")
-	return string(pp)
-}
+func prettyPrint(v interface{}) string { _ = "STUB: not implemented"; return "" }
 
 type devNullTransport struct{}
 
 func (t *devNullTransport) Configure(options sentry.ClientOptions) {
-	dsn, _ := sentry.NewDsn(options.Dsn)
-	fmt.Println()
-	fmt.Println("Store Endpoint:", dsn.StoreAPIURL())
-	fmt.Println("Headers:", dsn.RequestHeaders())
-	fmt.Println()
-}
-func (t *devNullTransport) SendEvent(event *sentry.Event) {
-	fmt.Println("Faked Transport")
+	_ = "STUB: not implemented"
+	return
 }
 
+func (t *devNullTransport) SendEvent(event *sentry.Event) { _ = "STUB: not implemented"; return }
+
 func (t *devNullTransport) Flush(timeout time.Duration) bool {
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
 type CustomComplexError struct {
@@ -35,31 +28,18 @@ type CustomComplexError struct {
 	MoreData map[string]string
 }
 
-func (e CustomComplexError) Error() string {
-	return "CustomComplexError: " + e.Message
-}
+func (e CustomComplexError) Error() string { _ = "STUB: not implemented"; return "" }
 
 func (e CustomComplexError) GimmeMoreData() map[string]string {
-	return e.MoreData
+	_ = "STUB: not implemented"
+	return nil
 }
 
 type ExtractExtra struct{}
 
-func (ee ExtractExtra) Name() string {
-	return "ExtractExtra"
-}
+func (ee ExtractExtra) Name() string { _ = "STUB: not implemented"; return "" }
 
-func (ee ExtractExtra) SetupOnce(client *sentry.Client) {
-	client.AddEventProcessor(func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-		if ex, ok := hint.OriginalException.(CustomComplexError); ok {
-			for key, val := range ex.GimmeMoreData() {
-				event.Extra[key] = val
-			}
-		}
-
-		return event
-	})
-}
+func (ee ExtractExtra) SetupOnce(client *sentry.Client) { _ = "STUB: not implemented"; return }
 
 func main() {
 	if err := sentry.Init(sentry.ClientOptions{

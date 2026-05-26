@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"log"
 	"time"
 
@@ -13,7 +11,6 @@ import (
 	sentrygrpc "github.com/getsentry/sentry-go/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 )
 
 const grpcServerAddress = "localhost:50051"
@@ -53,67 +50,18 @@ func main() {
 	streamExample(client)
 }
 
-func unaryExample(client examplepb.ExampleServiceClient) {
-	ctx := context.Background()
+func unaryExample(client examplepb.ExampleServiceClient) { _ = "STUB: not implemented"; return }
 
-	// Add metadata to the context
-	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(
-		"custom-header", "value",
-	))
+// Add metadata to the context
 
-	req := &examplepb.ExampleRequest{
-		Message: "Hello, server!", // Change to "error" to simulate an error
-	}
+// Change to "error" to simulate an error
 
-	res, err := client.UnaryExample(ctx, req)
-	if err != nil {
-		fmt.Printf("Unary Call Error: %v\n", err)
-		sentry.CaptureException(err)
-		return
-	}
+func streamExample(client examplepb.ExampleServiceClient) { _ = "STUB: not implemented"; return }
 
-	fmt.Printf("Unary Response: %s\n", res.Message)
-}
+// Add metadata to the context
 
-func streamExample(client examplepb.ExampleServiceClient) {
-	ctx := context.Background()
+// Send multiple messages in the stream
 
-	// Add metadata to the context
-	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(
-		"streaming-header", "stream-value",
-	))
+// Close the stream for sending
 
-	stream, err := client.StreamExample(ctx)
-	if err != nil {
-		fmt.Printf("Failed to establish stream: %v\n", err)
-		sentry.CaptureException(err)
-		return
-	}
-
-	// Send multiple messages in the stream
-	messages := []string{"Message 1", "Message 2", "error", "Message 4"}
-	for _, msg := range messages {
-		err := stream.Send(&examplepb.ExampleRequest{Message: msg})
-		if err != nil {
-			fmt.Printf("Stream Send Error: %v\n", err)
-			sentry.CaptureException(err)
-			return
-		}
-	}
-
-	// Close the stream for sending
-	stream.CloseSend()
-
-	// Receive responses from the server
-	for {
-		res, err := stream.Recv()
-		if err != nil {
-			if err != io.EOF {
-				fmt.Printf("Stream Recv Error: %v\n", err)
-				sentry.CaptureException(err)
-			}
-			break
-		}
-		fmt.Printf("Stream Response: %s\n", res.Message)
-	}
-}
+// Receive responses from the server

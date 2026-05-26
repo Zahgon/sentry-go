@@ -1,18 +1,12 @@
 package sentryfiber
 
 import (
-	"bytes"
-	"context"
-	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/utils"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 )
 
 const (
@@ -45,145 +39,26 @@ type Options struct {
 }
 
 // New returns a handler struct which satisfies Fiber's middleware interface.
-func New(options Options) fiber.Handler {
-	if options.Timeout == 0 {
-		options.Timeout = sentry.DefaultFlushTimeout
-	}
+func New(options Options) fiber.Handler { _ = "STUB: not implemented"; return *new(fiber.Handler) }
 
-	return (&handler{
-		repanic:         options.Repanic,
-		timeout:         options.Timeout,
-		waitForDelivery: options.WaitForDelivery,
-	}).handle
-}
-
-func (h *handler) handle(ctx *fiber.Ctx) error {
-	hub := GetHubFromContext(ctx)
-	if hub == nil {
-		hub = sentry.CurrentHub().Clone()
-	}
-
-	if client := hub.Client(); client != nil {
-		client.SetSDKIdentifier(sdkIdentifier)
-	}
-
-	r := convert(ctx)
-
-	transactionName := ctx.Path()
-	transactionSource := sentry.SourceURL
-
-	options := []sentry.SpanOption{
-		sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader)),
-		sentry.WithOpName("http.server"),
-		sentry.WithTransactionSource(transactionSource),
-		sentry.WithSpanOrigin(sentry.SpanOriginFiber),
-	}
-
-	savedCtx := ctx.UserContext()
-	requestCtx, cancel := context.WithCancel(savedCtx)
-	defer cancel()
-	defer func() { ctx.SetUserContext(savedCtx) }()
-
-	transaction := sentry.StartTransaction(
-		sentry.SetHubOnContext(requestCtx, hub),
-		fmt.Sprintf("%s %s", r.Method, transactionName),
-		options...,
-	)
-	ctx.SetUserContext(transaction.Context())
-
-	defer func() {
-		status := ctx.Response().StatusCode()
-		transaction.Status = sentry.HTTPtoSpanStatus(status)
-		transaction.SetData("http.response.status_code", status)
-		transaction.Finish()
-	}()
-
-	transaction.SetData("http.request.method", r.Method)
-	r = r.WithContext(transaction.Context())
-
-	scope := hub.Scope()
-	scope.SetRequest(r)
-	scope.SetRequestBody(bytes.Clone(ctx.Request().Body()))
-	ctx.Locals(valuesKey, hub)
-	ctx.Locals(transactionKey, transaction)
-	defer h.recoverWithSentry(hub, ctx)
-
-	return ctx.Next()
-}
+func (h *handler) handle(ctx *fiber.Ctx) error { _ = "STUB: not implemented"; return nil }
 
 func (h *handler) recoverWithSentry(hub *sentry.Hub, ctx *fiber.Ctx) {
-	if err := recover(); err != nil {
-		eventID := hub.RecoverWithContext(
-			context.WithValue(ctx.UserContext(), sentry.RequestContextKey, ctx),
-			err,
-		)
-		if eventID != nil && h.waitForDelivery {
-			hub.Flush(h.timeout)
-		}
-		if h.repanic {
-			panic(err)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // GetHubFromContext retrieves the Hub instance from the *fiber.Ctx.
-func GetHubFromContext(ctx *fiber.Ctx) *sentry.Hub {
-	if hub, ok := ctx.Locals(valuesKey).(*sentry.Hub); ok {
-		return hub
-	}
-	return nil
-}
+func GetHubFromContext(ctx *fiber.Ctx) *sentry.Hub { _ = "STUB: not implemented"; return nil }
 
 // SetHubOnContext sets the Hub instance on the *fiber.Ctx.
-func SetHubOnContext(ctx *fiber.Ctx, hub *sentry.Hub) {
-	ctx.Locals(valuesKey, hub)
-}
+func SetHubOnContext(ctx *fiber.Ctx, hub *sentry.Hub) { _ = "STUB: not implemented"; return }
 
 // GetSpanFromContext retrieves the Span instance from the *fiber.Ctx.
-func GetSpanFromContext(ctx *fiber.Ctx) *sentry.Span {
-	if span, ok := ctx.Locals(transactionKey).(*sentry.Span); ok {
-		return span
-	}
-	return nil
-}
+func GetSpanFromContext(ctx *fiber.Ctx) *sentry.Span { _ = "STUB: not implemented"; return nil }
 
-func convert(ctx *fiber.Ctx) *http.Request {
-	defer func() {
-		if err := recover(); err != nil {
-			debuglog.Printf("%v", err)
-		}
-	}()
+func convert(ctx *fiber.Ctx) *http.Request { _ = "STUB: not implemented"; return nil }
 
-	r := new(http.Request)
+// Headers
 
-	r.Method = utils.CopyString(ctx.Method())
-
-	uri := ctx.Request().URI()
-	r.URL = &url.URL{Path: string(uri.Path())}
-	r.URL.RawQuery = string(uri.QueryString())
-
-	if parsedURL, err := url.Parse(fmt.Sprintf("%s://%s%s", uri.Scheme(), uri.Host(), uri.Path())); err == nil {
-		r.URL = parsedURL
-		r.URL.RawQuery = string(uri.QueryString())
-	}
-
-	host := utils.CopyString(ctx.Hostname())
-	r.Host = host
-
-	// Headers
-	r.Header = make(http.Header)
-	r.Header.Add("Host", host)
-
-	ctx.Request().Header.VisitAll(func(key, value []byte) {
-		r.Header.Add(string(key), string(value))
-	})
-
-	// Cookies
-	ctx.Request().Header.VisitAllCookie(func(key, value []byte) {
-		r.AddCookie(&http.Cookie{Name: string(key), Value: string(value)})
-	})
-
-	r.RemoteAddr = ctx.Context().RemoteAddr().String()
-
-	return r
-}
+// Cookies

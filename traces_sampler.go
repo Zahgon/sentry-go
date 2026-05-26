@@ -21,6 +21,4 @@ type SamplingContext struct {
 // functions as a TracesSampler.
 type TracesSampler func(ctx SamplingContext) float64
 
-func (f TracesSampler) Sample(ctx SamplingContext) float64 {
-	return f(ctx)
-}
+func (f TracesSampler) Sample(ctx SamplingContext) float64 { _ = "STUB: not implemented"; return 0 }

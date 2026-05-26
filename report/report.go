@@ -1,7 +1,6 @@
 package report
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/getsentry/sentry-go/internal/protocol"
@@ -15,9 +14,6 @@ type ClientReport struct {
 
 // ToEnvelopeItem converts the ClientReport to an envelope item.
 func (r *ClientReport) ToEnvelopeItem() (*protocol.EnvelopeItem, error) {
-	payload, err := json.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	return protocol.NewClientReportItem(payload), nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }

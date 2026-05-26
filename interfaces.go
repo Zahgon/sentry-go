@@ -3,14 +3,10 @@ package sentry
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go/attribute"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 	"github.com/getsentry/sentry-go/internal/protocol"
 	"github.com/getsentry/sentry-go/internal/ratelimit"
 )
@@ -160,33 +156,18 @@ type meterOptions struct {
 }
 
 // WithUnit sets the unit for the metric (e.g., "millisecond", "byte").
-func WithUnit(unit string) MeterOption {
-	return func(o *meterOptions) {
-		o.unit = unit
-	}
-}
+func WithUnit(unit string) MeterOption { _ = "STUB: not implemented"; return *new(MeterOption) }
 
 // WithScopeOverride sets a custom scope for the metric, overriding the default scope from the hub.
 func WithScopeOverride(scope *Scope) MeterOption {
-	return func(o *meterOptions) {
-		o.scope = scope
-	}
+	_ = "STUB: not implemented"
+	return *new(MeterOption)
 }
 
 // WithAttributes sets attributes for the metric.
 func WithAttributes(attrs ...attribute.Builder) MeterOption {
-	return func(o *meterOptions) {
-		if o.attributes == nil {
-			o.attributes = make(map[string]attribute.Value, len(attrs))
-		}
-		for _, a := range attrs {
-			if a.Value.Type() == attribute.INVALID {
-				debuglog.Printf("invalid attribute: %v", a)
-				continue
-			}
-			o.attributes[a.Key] = a.Value
-		}
-	}
+	_ = "STUB: not implemented"
+	return *new(MeterOption)
 }
 
 // Attachment allows associating files with your events to aid in investigation.
@@ -208,33 +189,7 @@ type User struct {
 	Data      map[string]string `json:"data,omitempty"`
 }
 
-func (u User) IsEmpty() bool {
-	if u.ID != "" {
-		return false
-	}
-
-	if u.Email != "" {
-		return false
-	}
-
-	if u.IPAddress != "" {
-		return false
-	}
-
-	if u.Username != "" {
-		return false
-	}
-
-	if u.Name != "" {
-		return false
-	}
-
-	if len(u.Data) > 0 {
-		return false
-	}
-
-	return true
-}
+func (u User) IsEmpty() bool { _ = "STUB: not implemented"; return false }
 
 // Request contains information on a HTTP request related to the event.
 type Request struct {
@@ -247,63 +202,23 @@ type Request struct {
 	Env         map[string]string `json:"env,omitempty"`
 }
 
-func sendDefaultPIIEnabled(client *Client) bool {
-	return client != nil && client.options.SendDefaultPII
-}
+func sendDefaultPIIEnabled(client *Client) bool { _ = "STUB: not implemented"; return false }
 
 func newRequest(r *http.Request, sendDefaultPII bool) *Request {
-	prot := protocol.SchemeHTTP
-	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
-		prot = protocol.SchemeHTTPS
-	}
-	url := fmt.Sprintf("%s://%s%s", prot, r.Host, r.URL.Path)
-
-	var cookies string
-	var env map[string]string
-	headers := map[string]string{}
-
-	if sendDefaultPII {
-		// We read only the first Cookie header because of the specification:
-		// https://tools.ietf.org/html/rfc6265#section-5.4
-		// When the user agent generates an HTTP request, the user agent MUST NOT
-		// attach more than one Cookie header field.
-		cookies = r.Header.Get("Cookie")
-
-		headers = make(map[string]string, len(r.Header))
-		for k, v := range r.Header {
-			headers[k] = strings.Join(v, ",")
-		}
-
-		if addr, port, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-			env = map[string]string{"REMOTE_ADDR": addr, "REMOTE_PORT": port}
-		}
-	} else {
-		for k, v := range r.Header {
-			if !IsSensitiveHeader(k) {
-				headers[k] = strings.Join(v, ",")
-			}
-		}
-	}
-
-	headers["Host"] = r.Host
-
-	return &Request{
-		URL:         url,
-		Method:      r.Method,
-		QueryString: r.URL.RawQuery,
-		Cookies:     cookies,
-		Headers:     headers,
-		Env:         env,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// We read only the first Cookie header because of the specification:
+// https://tools.ietf.org/html/rfc6265#section-5.4
+// When the user agent generates an HTTP request, the user agent MUST NOT
+// attach more than one Cookie header field.
 
 // NewRequest returns a new Sentry Request from the given http.Request.
 //
 // NewRequest avoids operations that depend on network access. In particular, it
 // does not read r.Body.
-func NewRequest(r *http.Request) *Request {
-	return newRequest(r, sendDefaultPIIEnabled(CurrentHub().Client()))
-}
+func NewRequest(r *http.Request) *Request { _ = "STUB: not implemented"; return nil }
 
 // Mechanism is the mechanism by which an exception was generated and handled.
 type Mechanism struct {
@@ -320,9 +235,7 @@ type Mechanism struct {
 
 // SetUnhandled indicates that the exception is an unhandled exception, i.e.
 // from a panic.
-func (m *Mechanism) SetUnhandled() {
-	m.Handled = Pointer(false)
-}
+func (m *Mechanism) SetUnhandled() { _ = "STUB: not implemented"; return }
 
 // Exception specifies an error that occurred.
 type Exception struct {
@@ -441,117 +354,56 @@ type Event struct {
 // maxErrorDepth is the maximum depth of the error chain we will look
 // into while unwrapping the errors. If maxErrorDepth is -1, we will
 // unwrap all errors in the chain.
-func (e *Event) SetException(exception error, maxErrorDepth int) {
-	if exception == nil {
-		return
-	}
-
-	exceptions := convertErrorToExceptions(exception, maxErrorDepth)
-	if len(exceptions) == 0 {
-		return
-	}
-
-	e.Exception = exceptions
-}
+func (e *Event) SetException(exception error, maxErrorDepth int) { _ = "STUB: not implemented"; return }
 
 // safeMarshal wraps json.Marshal with a recover guard.
 //
 // we shouldn't panic since we already pre serialized all user mutable fields, but using this just to be safe.
-func (e *Event) safeMarshal() (b []byte, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			b = nil
-			err = fmt.Errorf("panic during event marshaling: %v", r)
-		}
-	}()
-	return json.Marshal(e)
-}
+func (e *Event) safeMarshal() (b []byte, err error) { _ = "STUB: not implemented"; return nil, nil }
 
 // ToEnvelopeItem converts the Event to a Sentry envelope item.
 func (e *Event) ToEnvelopeItem() (item *protocol.EnvelopeItem, err error) {
-	eventBody, err := e.safeMarshal()
-	if err != nil {
-		return nil, fmt.Errorf("could not encode event as JSON, skipping delivery: %w", err)
-	}
-
-	switch e.Type {
-	case transactionType:
-		item = protocol.NewTransactionItem(e.GetSpanCount(), eventBody)
-	case checkInType:
-		item = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeCheckIn, eventBody)
-	case logEvent.Type:
-		item = protocol.NewLogItem(len(e.Logs), eventBody)
-	case traceMetricEvent.Type:
-		item = protocol.NewTraceMetricItem(len(e.Metrics), eventBody)
-	default:
-		item = protocol.NewEnvelopeItem(protocol.EnvelopeItemTypeEvent, eventBody)
-	}
-
-	return item, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // ToEnvelope converts the Event to a Sentry envelope.
 func (e *Event) ToEnvelope(header *protocol.EnvelopeHeader) (*protocol.Envelope, error) {
-	item, err := e.ToEnvelopeItem()
-	if err != nil {
-		return nil, err
-	}
-
-	envelope := protocol.NewEnvelope(header, item)
-	for _, attachment := range e.Attachments {
-		attachmentItem := protocol.NewAttachmentItem(attachment.Filename, attachment.ContentType, attachment.Payload)
-		envelope.AddItem(attachmentItem)
-	}
-	return envelope, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // GetCategory returns the rate limit category for this event.
 func (e *Event) GetCategory() ratelimit.Category {
-	return e.toCategory()
+	_ = "STUB: not implemented"
+	return *
+
+	// GetEventID returns the event ID.
+	new(ratelimit.Category)
 }
 
-// GetEventID returns the event ID.
-func (e *Event) GetEventID() string {
-	return string(e.EventID)
-}
+func (e *Event) GetEventID() string { _ = "STUB: not implemented"; return "" }
 
 // GetSdkInfo returns SDK information for the envelope header.
 func (e *Event) GetSdkInfo() *protocol.SdkInfo {
-	return &e.Sdk
+	_ = "STUB: not implemented"
+
+	// GetDynamicSamplingContext returns trace context for the envelope header.
+	return nil
 }
 
-// GetDynamicSamplingContext returns trace context for the envelope header.
 func (e *Event) GetDynamicSamplingContext() map[string]string {
-	trace := make(map[string]string)
-	if dsc := e.sdkMetaData.dsc; dsc.HasEntries() {
-		for k, v := range dsc.Entries {
-			trace[k] = v
-		}
-	}
-	return trace
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // GetSpanCount returns the number of spans in the transaction including the transaction itself. It is used for client
 // reports. Returns 0 for non-transaction events.
-func (e *Event) GetSpanCount() int {
-	if e.Type != transactionType {
-		return 0
-	}
-	return len(e.Spans) + 1
-}
+func (e *Event) GetSpanCount() int { _ = "STUB: not implemented"; return 0 }
 
 // GetLogByteSize returns the approximate total byte size of all logs in the event. It is used for client
 // reports. Returns 0 for non-log events.
-func (e *Event) GetLogByteSize() int {
-	if e.Type != logEvent.Type {
-		return 0
-	}
-	var size int
-	for i := range e.Logs {
-		size += e.Logs[i].ApproximateSize()
-	}
-	return size
-}
+func (e *Event) GetLogByteSize() int { _ = "STUB: not implemented"; return 0 }
 
 // TODO: Event.Contexts map[string]interface{} => map[string]EventContext,
 // to prevent accidentally storing T when we mean *T.
@@ -560,166 +412,47 @@ func (e *Event) GetLogByteSize() int {
 // type EventContext interface{ EventContext() }
 
 // MarshalJSON converts the Event struct to JSON.
-func (e *Event) MarshalJSON() ([]byte, error) {
-	if e.Type == checkInType {
-		return e.checkInMarshalJSON()
-	}
-	return e.defaultMarshalJSON()
-}
+func (e *Event) MarshalJSON() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 func (e *Event) defaultMarshalJSON() ([]byte, error) {
+	_ = "STUB: not implemented"
 	// event aliases Event to allow calling json.Marshal without an infinite
 	// loop. It preserves all fields while none of the attached methods.
-	type event Event
-
-	// Use pre-serialized bytes for fields that contain user mutable data.
-	if e.hasPreSerializedFields() {
-		return e.preSerializedMarshalJSON()
-	}
-
-	if e.Type == transactionType {
-		return json.Marshal(struct{ *event }{(*event)(e)})
-	}
-	// metrics and logs should be serialized under the same `items` json field.
-	if e.Type == logEvent.Type {
-		type logEvent struct {
-			*event
-			Items []Log           `json:"items,omitempty"`
-			Type  json.RawMessage `json:"type,omitempty"`
-		}
-		return json.Marshal(logEvent{event: (*event)(e), Items: e.Logs})
-	}
-
-	if e.Type == traceMetricEvent.Type {
-		type metricEvent struct {
-			*event
-			Items []Metric        `json:"items,omitempty"`
-			Type  json.RawMessage `json:"type,omitempty"`
-		}
-		return json.Marshal(metricEvent{event: (*event)(e), Items: e.Metrics})
-	}
-
-	// errorEvent is like Event with shadowed fields for customizing JSON
-	// marshaling.
-	type errorEvent struct {
-		*event
-
-		// The fields below are not part of error events and only make sense to
-		// be sent for transactions. They shadow the respective fields in Event
-		// and are meant to remain nil, triggering the omitempty behavior.
-
-		Type            json.RawMessage `json:"type,omitempty"`
-		StartTime       json.RawMessage `json:"start_timestamp,omitempty"`
-		Spans           json.RawMessage `json:"spans,omitempty"`
-		TransactionInfo json.RawMessage `json:"transaction_info,omitempty"`
-	}
-
-	x := errorEvent{event: (*event)(e)}
-	return json.Marshal(x)
+	return nil, nil
 }
 
-func (e *Event) hasPreSerializedFields() bool {
-	return e.serializationSafe
-}
+// Use pre-serialized bytes for fields that contain user mutable data.
+
+// metrics and logs should be serialized under the same `items` json field.
+
+// errorEvent is like Event with shadowed fields for customizing JSON
+// marshaling.
+
+// The fields below are not part of error events and only make sense to
+// be sent for transactions. They shadow the respective fields in Event
+// and are meant to remain nil, triggering the omitempty behavior.
+
+func (e *Event) hasPreSerializedFields() bool { _ = "STUB: not implemented"; return false }
 
 // preSerializedMarshalJSON handles marshaling when MakeSerializationSafe has
 // pre-serialized mutable fields. Shadow structs ensure the json.RawMessage
 // bytes are emitted directly, overriding the original fields.
 func (e *Event) preSerializedMarshalJSON() ([]byte, error) {
-	type event Event
-
-	if e.Type == transactionType {
-		type safeTransaction struct {
-			*event
-			Tags        json.RawMessage `json:"tags,omitempty"`
-			Contexts    json.RawMessage `json:"contexts,omitempty"`
-			Breadcrumbs json.RawMessage `json:"breadcrumbs,omitempty"`
-			Exception   json.RawMessage `json:"exception,omitempty"`
-			User        json.RawMessage `json:"user,omitempty"`
-		}
-		return json.Marshal(safeTransaction{
-			event:       (*event)(e),
-			Tags:        e.serializedTags,
-			Contexts:    e.serializedContexts,
-			Breadcrumbs: e.serializedBreadcrumbs,
-			Exception:   e.serializedException,
-			User:        e.serializedUser,
-		})
-	}
-
-	// Error event: also shadow transaction-only fields to exclude them.
-	type safeErrorEvent struct {
-		*event
-		Tags            json.RawMessage `json:"tags,omitempty"`
-		Contexts        json.RawMessage `json:"contexts,omitempty"`
-		Breadcrumbs     json.RawMessage `json:"breadcrumbs,omitempty"`
-		Exception       json.RawMessage `json:"exception,omitempty"`
-		User            json.RawMessage `json:"user,omitempty"`
-		Type            json.RawMessage `json:"type,omitempty"`
-		StartTime       json.RawMessage `json:"start_timestamp,omitempty"`
-		Spans           json.RawMessage `json:"spans,omitempty"`
-		TransactionInfo json.RawMessage `json:"transaction_info,omitempty"`
-	}
-	return json.Marshal(safeErrorEvent{
-		event:       (*event)(e),
-		Tags:        e.serializedTags,
-		Contexts:    e.serializedContexts,
-		Breadcrumbs: e.serializedBreadcrumbs,
-		Exception:   e.serializedException,
-		User:        e.serializedUser,
-	})
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (e *Event) checkInMarshalJSON() ([]byte, error) {
-	checkIn := serializedCheckIn{
-		CheckInID:     string(e.CheckIn.ID),
-		MonitorSlug:   e.CheckIn.MonitorSlug,
-		Status:        e.CheckIn.Status,
-		Duration:      e.CheckIn.Duration.Seconds(),
-		Release:       e.Release,
-		Environment:   e.Environment,
-		MonitorConfig: nil,
-	}
+// Error event: also shadow transaction-only fields to exclude them.
 
-	if e.MonitorConfig != nil {
-		checkIn.MonitorConfig = &MonitorConfig{
-			Schedule:              e.MonitorConfig.Schedule,
-			CheckInMargin:         e.MonitorConfig.CheckInMargin,
-			MaxRuntime:            e.MonitorConfig.MaxRuntime,
-			Timezone:              e.MonitorConfig.Timezone,
-			FailureIssueThreshold: e.MonitorConfig.FailureIssueThreshold,
-			RecoveryThreshold:     e.MonitorConfig.RecoveryThreshold,
-		}
-	}
-
-	return json.Marshal(checkIn)
-}
+func (e *Event) checkInMarshalJSON() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 func (e *Event) toCategory() ratelimit.Category {
-	switch e.Type {
-	case errorType:
-		return ratelimit.CategoryError
-	case transactionType:
-		return ratelimit.CategoryTransaction
-	case logEvent.Type:
-		return ratelimit.CategoryLog
-	case checkInType:
-		return ratelimit.CategoryMonitor
-	case traceMetricEvent.Type:
-		return ratelimit.CategoryTraceMetric
-	default:
-		return ratelimit.CategoryUnknown
-	}
+	_ = "STUB: not implemented"
+	return *new(ratelimit.Category)
 }
 
 // NewEvent creates a new Event.
-func NewEvent() *Event {
-	return &Event{
-		Contexts: make(map[string]Context),
-		Tags:     make(map[string]string),
-		Modules:  make(map[string]string),
-	}
-}
+func NewEvent() *Event { _ = "STUB: not implemented"; return nil }
 
 // Thread specifies threads that were running at the time of an event.
 type Thread struct {
@@ -755,29 +488,28 @@ type Log struct {
 }
 
 // ApproximateSize returns the pre-computed approximate serialized size in bytes.
-func (l *Log) ApproximateSize() int {
-	return l.approximateSize
-}
+func (l *Log) ApproximateSize() int { _ = "STUB: not implemented"; return 0 }
 
 // computeLogSize estimates the serialized JSON size of a log entry.
 func computeLogSize(l *Log) int {
+	_ = "STUB: not implemented"
 	// Base overhead: timestamp, trace_id, level, severity, JSON structure
-	size := len(l.Body) + 60
-	for k, v := range l.Attributes {
-		// Key + type/value JSON overhead
-		size += len(k) + 20
-		s := fmt.Sprint(v.AsInterface())
-		size += len(s)
-	}
-	return size
+	return 0
 }
 
-// MakeSerializationSafe is a no-op for Log, all fields are passed from the safe attribute API.
-func (l *Log) MakeSerializationSafe() {}
+// Key + type/value JSON overhead
 
-// GetCategory returns the rate limit category for logs.
+// MakeSerializationSafe is a no-op for Log, all fields are passed from the safe attribute API.
+func (l *Log) MakeSerializationSafe() {
+	_ = "STUB: not implemented"
+
+	// GetCategory returns the rate limit category for logs.
+	return
+}
+
 func (l *Log) GetCategory() ratelimit.Category {
-	return ratelimit.CategoryLog
+	_ = "STUB: not implemented"
+	return *new(ratelimit.Category)
 }
 
 type MetricType string
@@ -801,11 +533,16 @@ type Metric struct {
 }
 
 // MakeSerializationSafe is a no-op for Metric, all fields are passed from the safe attribute API.
-func (m *Metric) MakeSerializationSafe() {}
+func (m *Metric) MakeSerializationSafe() {
+	_ = "STUB: not implemented"
 
-// GetCategory returns the rate limit category for metrics.
+	// GetCategory returns the rate limit category for metrics.
+	return
+}
+
 func (m *Metric) GetCategory() ratelimit.Category {
-	return ratelimit.CategoryTraceMetric
+	_ = "STUB: not implemented"
+	return *new(ratelimit.Category)
 }
 
 // MetricValue stores metric values with full precision.
@@ -816,86 +553,35 @@ type MetricValue struct {
 
 // Int64MetricValue creates a MetricValue from an int64.
 // Used for counter metrics to preserve full int64 precision.
-func Int64MetricValue(v int64) MetricValue {
-	return MetricValue{value: attribute.Int64Value(v)}
-}
+func Int64MetricValue(v int64) MetricValue { _ = "STUB: not implemented"; return *new(MetricValue) }
 
 // Float64MetricValue creates a MetricValue from a float64.
 // Used for gauge and distribution metrics.
-func Float64MetricValue(v float64) MetricValue {
-	return MetricValue{value: attribute.Float64Value(v)}
-}
+func Float64MetricValue(v float64) MetricValue { _ = "STUB: not implemented"; return *new(MetricValue) }
 
 // Type returns the type of the stored value (attribute.INT64 or attribute.FLOAT64).
 func (v MetricValue) Type() attribute.Type {
-	return v.value.Type()
+	_ = "STUB: not implemented"
+	return *
+
+	// Int64 returns the value as int64 if it holds an int64.
+	// The second return value indicates whether the type matched.
+	new(attribute.Type)
 }
 
-// Int64 returns the value as int64 if it holds an int64.
-// The second return value indicates whether the type matched.
-func (v MetricValue) Int64() (int64, bool) {
-	if v.value.Type() == attribute.INT64 {
-		return v.value.AsInt64(), true
-	}
-	return 0, false
-}
+func (v MetricValue) Int64() (int64, bool) { _ = "STUB: not implemented"; return 0, false }
 
 // Float64 returns the value as float64 if it holds a float64.
 // The second return value indicates whether the type matched.
-func (v MetricValue) Float64() (float64, bool) {
-	if v.value.Type() == attribute.FLOAT64 {
-		return v.value.AsFloat64(), true
-	}
-	return 0, false
-}
+func (v MetricValue) Float64() (float64, bool) { _ = "STUB: not implemented"; return 0, false }
 
 // AsInterface returns the value as int64 or float64.
 // Use type assertion or type switch to handle the result.
-func (v MetricValue) AsInterface() any {
-	return v.value.AsInterface()
-}
+func (v MetricValue) AsInterface() any { _ = "STUB: not implemented"; return *new(any) }
 
 // MarshalJSON serializes the value as a bare number.
-func (v MetricValue) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.value.AsInterface())
-}
+func (v MetricValue) MarshalJSON() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // MakeSerializationSafe pre-serializes all fields containing user mutable data to json.RawMessage, preventing race
 // conditions when the event is later serialized on a background goroutine.
-func (e *Event) MakeSerializationSafe() {
-	if len(e.Tags) > 0 {
-		if b, err := json.Marshal(e.Tags); err == nil {
-			e.serializedTags = b
-		}
-	}
-
-	if len(e.Contexts) > 0 {
-		if b, err := json.Marshal(e.Contexts); err == nil {
-			e.serializedContexts = b
-		}
-	}
-
-	if len(e.Breadcrumbs) > 0 {
-		if b, err := json.Marshal(e.Breadcrumbs); err == nil {
-			e.serializedBreadcrumbs = b
-		}
-	}
-
-	if len(e.Exception) > 0 {
-		if b, err := json.Marshal(e.Exception); err == nil {
-			e.serializedException = b
-		}
-	}
-
-	if !e.User.IsEmpty() {
-		if b, err := json.Marshal(e.User); err == nil {
-			e.serializedUser = b
-		}
-	}
-
-	for _, span := range e.Spans {
-		span.makeSerializationSafe()
-	}
-
-	e.serializationSafe = true
-}
+func (e *Event) MakeSerializationSafe() { _ = "STUB: not implemented"; return }

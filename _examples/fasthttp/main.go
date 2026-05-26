@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/getsentry/sentry-go"
@@ -10,31 +9,17 @@ import (
 )
 
 func enhanceSentryEvent(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		if hub := sentryfasthttp.GetHubFromContext(ctx); hub != nil {
-			hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
-		}
-
-		expensiveThing := func(ctx context.Context) error {
-			span := sentry.StartTransaction(ctx, "expensive_thing")
-			defer span.Finish()
-			// do resource intensive thing
-			return nil
-		}
-
-		// Acquire transaction on current hub that's created by the SDK.
-		// Be careful, it might be a nil value if you didn't set up sentryecho middleware.
-		sentrySpan := sentryfasthttp.GetSpanFromContext(ctx)
-		// Pass in the `.Context()` method from `*sentry.Span` struct.
-		// The `context.Context` instance inherits the context from `echo.Context`.
-		err := expensiveThing(sentrySpan.Context())
-		if err != nil {
-			sentry.CaptureException(err)
-		}
-
-		handler(ctx)
-	}
+	_ = "STUB: not implemented"
+	return *new(fasthttp.RequestHandler)
 }
+
+// do resource intensive thing
+
+// Acquire transaction on current hub that's created by the SDK.
+// Be careful, it might be a nil value if you didn't set up sentryecho middleware.
+
+// Pass in the `.Context()` method from `*sentry.Span` struct.
+// The `context.Context` instance inherits the context from `echo.Context`.
 
 func main() {
 	_ = sentry.Init(sentry.ClientOptions{

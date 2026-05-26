@@ -2,7 +2,6 @@ package sentryotel
 
 import (
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/otel/internal/common"
 )
 
 type integration struct{}
@@ -12,13 +11,10 @@ type integration struct{}
 // It links captured Sentry errors, logs, and metrics to the active
 // OpenTelemetry trace when a context carrying an active OTel span is used.
 func NewOtelIntegration() sentry.Integration {
-	return integration{}
+	_ = "STUB: not implemented"
+	return *new(sentry.Integration)
 }
 
-func (integration) Name() string {
-	return "OTel"
-}
+func (integration) Name() string { _ = "STUB: not implemented"; return "" }
 
-func (integration) SetupOnce(client *sentry.Client) {
-	client.SetExternalContextTraceResolver(common.ResolveTraceContext)
-}
+func (integration) SetupOnce(client *sentry.Client) { _ = "STUB: not implemented"; return }

@@ -3,7 +3,6 @@ package testutils
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getsentry/sentry-go/internal/protocol"
@@ -21,84 +20,46 @@ type MockTelemetryTransport struct {
 }
 
 func (m *MockTelemetryTransport) SendEnvelope(envelope *protocol.Envelope) error {
-	atomic.AddInt64(&m.sendCount, 1)
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if m.sendError != nil {
-		return m.sendError
-	}
-
-	m.sentEnvelopes = append(m.sentEnvelopes, envelope)
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (m *MockTelemetryTransport) IsRateLimited(category ratelimit.Category) bool {
-	atomic.AddInt64(&m.rateLimitedCalls, 1)
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if m.rateLimited == nil {
-		return false
-	}
-	return m.rateLimited[string(category)]
+	_ = "STUB: not implemented"
+	return false
 }
 
-func (m *MockTelemetryTransport) HasCapacity() bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.capacity == 0 {
-		return true
-	}
-	return int(m.sendCount) < m.capacity
-}
+func (m *MockTelemetryTransport) HasCapacity() bool { _ = "STUB: not implemented"; return false }
 
 func (m *MockTelemetryTransport) Flush(_ time.Duration) bool {
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
 func (m *MockTelemetryTransport) FlushWithContext(_ context.Context) bool {
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
 func (m *MockTelemetryTransport) Configure(_ interface{}) error {
+	_ = "STUB: not implemented"
 	return nil
 }
 
-func (m *MockTelemetryTransport) Close() {
-}
+func (m *MockTelemetryTransport) Close() { _ = "STUB: not implemented"; return }
 
 func (m *MockTelemetryTransport) GetSentEnvelopes() []*protocol.Envelope {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	result := make([]*protocol.Envelope, len(m.sentEnvelopes))
-	copy(result, m.sentEnvelopes)
-	return result
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (m *MockTelemetryTransport) SetRateLimited(category string, limited bool) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.rateLimited == nil {
-		m.rateLimited = make(map[string]bool)
-	}
-	m.rateLimited[category] = limited
+	_ = "STUB: not implemented"
+	return
 }
 
-func (m *MockTelemetryTransport) GetSendCount() int64 {
-	return atomic.LoadInt64(&m.sendCount)
-}
+func (m *MockTelemetryTransport) GetSendCount() int64 { _ = "STUB: not implemented"; return 0 }
 
-func (m *MockTelemetryTransport) GetRateLimitedCalls() int64 {
-	return atomic.LoadInt64(&m.rateLimitedCalls)
-}
+func (m *MockTelemetryTransport) GetRateLimitedCalls() int64 { _ = "STUB: not implemented"; return 0 }
 
-func (m *MockTelemetryTransport) Reset() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.sentEnvelopes = nil
-	m.rateLimited = nil
-	atomic.StoreInt64(&m.sendCount, 0)
-	atomic.StoreInt64(&m.rateLimitedCalls, 0)
-	m.capacity = 0
-}
+func (m *MockTelemetryTransport) Reset() { _ = "STUB: not implemented"; return }

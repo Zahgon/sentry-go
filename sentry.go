@@ -17,41 +17,24 @@ const DefaultFlushTimeout = 2 * time.Second
 
 // Init initializes the SDK with options. The returned error is non-nil if
 // options is invalid, for instance if a malformed DSN is provided.
-func Init(options ClientOptions) error {
-	hub := CurrentHub()
-	client, err := NewClient(options)
-	if err != nil {
-		return err
-	}
-	hub.BindClient(client)
-	return nil
-}
+func Init(options ClientOptions) error { _ = "STUB: not implemented"; return nil }
 
 // AddBreadcrumb records a new breadcrumb.
 //
 // The total number of breadcrumbs that can be recorded are limited by the
 // configuration on the client.
-func AddBreadcrumb(breadcrumb *Breadcrumb) {
-	hub := CurrentHub()
-	hub.AddBreadcrumb(breadcrumb, nil)
-}
+func AddBreadcrumb(breadcrumb *Breadcrumb) { _ = "STUB: not implemented"; return }
 
 // CaptureMessage captures an arbitrary message.
-func CaptureMessage(message string) *EventID {
-	hub := CurrentHub()
-	return hub.CaptureMessage(message)
-}
+func CaptureMessage(message string) *EventID { _ = "STUB: not implemented"; return nil }
 
 // CaptureException captures an error.
-func CaptureException(exception error) *EventID {
-	hub := CurrentHub()
-	return hub.CaptureException(exception)
-}
+func CaptureException(exception error) *EventID { _ = "STUB: not implemented"; return nil }
 
 // CaptureCheckIn captures a (cron) monitor check-in.
 func CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig) *EventID {
-	hub := CurrentHub()
-	return hub.CaptureCheckIn(checkIn, monitorConfig)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // CaptureEvent captures an event on the currently active client if any.
@@ -59,58 +42,25 @@ func CaptureCheckIn(checkIn *CheckIn, monitorConfig *MonitorConfig) *EventID {
 // The event must already be assembled. Typically code would instead use
 // the utility methods like CaptureException. The return value is the
 // event ID. In case Sentry is disabled or event was dropped, the return value will be nil.
-func CaptureEvent(event *Event) *EventID {
-	hub := CurrentHub()
-	return hub.CaptureEvent(event)
-}
+func CaptureEvent(event *Event) *EventID { _ = "STUB: not implemented"; return nil }
 
 // Recover captures a panic.
-func Recover() *EventID {
-	if err := recover(); err != nil {
-		hub := CurrentHub()
-		return hub.Recover(err)
-	}
-	return nil
-}
+func Recover() *EventID { _ = "STUB: not implemented"; return nil }
 
 // RecoverWithContext captures a panic and passes relevant context object.
-func RecoverWithContext(ctx context.Context) *EventID {
-	err := recover()
-	if err == nil {
-		return nil
-	}
-
-	hub := GetHubFromContext(ctx)
-	if hub == nil {
-		hub = CurrentHub()
-	}
-
-	return hub.RecoverWithContext(ctx, err)
-}
+func RecoverWithContext(ctx context.Context) *EventID { _ = "STUB: not implemented"; return nil }
 
 // WithScope is a shorthand for CurrentHub().WithScope.
-func WithScope(f func(scope *Scope)) {
-	hub := CurrentHub()
-	hub.WithScope(f)
-}
+func WithScope(f func(scope *Scope)) { _ = "STUB: not implemented"; return }
 
 // ConfigureScope is a shorthand for CurrentHub().ConfigureScope.
-func ConfigureScope(f func(scope *Scope)) {
-	hub := CurrentHub()
-	hub.ConfigureScope(f)
-}
+func ConfigureScope(f func(scope *Scope)) { _ = "STUB: not implemented"; return }
 
 // PushScope is a shorthand for CurrentHub().PushScope.
-func PushScope() {
-	hub := CurrentHub()
-	hub.PushScope()
-}
+func PushScope() { _ = "STUB: not implemented"; return }
 
 // PopScope is a shorthand for CurrentHub().PopScope.
-func PopScope() {
-	hub := CurrentHub()
-	hub.PopScope()
-}
+func PopScope() { _ = "STUB: not implemented"; return }
 
 // Flush waits until the underlying Transport sends any buffered events to the
 // Sentry server, blocking for at most the given timeout. It returns false if
@@ -123,10 +73,7 @@ func PopScope() {
 // CaptureException or CaptureMessage. Instead, to have the SDK send events over
 // the network synchronously, configure it to use the HTTPSyncTransport in the
 // call to Init.
-func Flush(timeout time.Duration) bool {
-	hub := CurrentHub()
-	return hub.Flush(timeout)
-}
+func Flush(timeout time.Duration) bool { _ = "STUB: not implemented"; return false }
 
 // FlushWithContext waits until the underlying Transport sends any buffered events
 // to the Sentry server, blocking for at most the duration specified by the context.
@@ -140,13 +87,7 @@ func Flush(timeout time.Duration) bool {
 // CaptureException, or CaptureMessage. To send events synchronously over the network,
 // configure the SDK to use HTTPSyncTransport during initialization with Init.
 
-func FlushWithContext(ctx context.Context) bool {
-	hub := CurrentHub()
-	return hub.FlushWithContext(ctx)
-}
+func FlushWithContext(ctx context.Context) bool { _ = "STUB: not implemented"; return false }
 
 // LastEventID returns an ID of last captured event.
-func LastEventID() EventID {
-	hub := CurrentHub()
-	return hub.LastEventID()
-}
+func LastEventID() EventID { _ = "STUB: not implemented"; return *new(EventID) }

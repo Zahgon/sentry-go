@@ -2,9 +2,7 @@ package utils
 
 import (
 	"github.com/getsentry/sentry-go"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
 
 // // OpenTelemetry span status can be Unset, Ok, Error. HTTP and Grpc codes contained in tags can make it more detailed.
@@ -45,29 +43,6 @@ var canonicalCodesGrpcMap = map[string]sentry.SpanStatus{
 }
 
 func MapOtelStatus(s trace.ReadOnlySpan) sentry.SpanStatus {
-	statusCode := s.Status().Code
-
-	for _, attribute := range s.Attributes() {
-		if attribute.Key == semconv.HTTPStatusCodeKey {
-			if status, ok := canonicalCodesHTTPMap[attribute.Value.Emit()]; ok {
-				return status
-			}
-		}
-
-		if attribute.Key == semconv.RPCGRPCStatusCodeKey {
-			if status, ok := canonicalCodesGrpcMap[attribute.Value.Emit()]; ok {
-				return status
-			}
-		}
-	}
-
-	if statusCode == codes.Unset || statusCode == codes.Ok {
-		return sentry.SpanStatusOK
-	}
-
-	if statusCode == codes.Error {
-		return sentry.SpanStatusInternalError
-	}
-
-	return sentry.SpanStatusUnknown
+	_ = "STUB: not implemented"
+	return *new(sentry.SpanStatus)
 }

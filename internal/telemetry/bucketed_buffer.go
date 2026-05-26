@@ -2,10 +2,8 @@ package telemetry
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"github.com/getsentry/sentry-go/internal/protocol"
 	"github.com/getsentry/sentry-go/internal/ratelimit"
 	"github.com/getsentry/sentry-go/report"
 )
@@ -59,361 +57,71 @@ func NewBucketedBuffer[T any](
 	timeout time.Duration,
 	recorder report.ClientReportRecorder,
 ) *BucketedBuffer[T] {
-	if capacity <= 0 {
-		capacity = defaultBucketedCapacity
-	}
-	if batchSize <= 0 {
-		batchSize = 1
-	}
-	if timeout < 0 {
-		timeout = 0
-	}
-
-	if recorder == nil {
-		recorder = report.NoopRecorder()
-	}
-
-	bucketCapacity := capacity / 10
-	if bucketCapacity < 10 {
-		bucketCapacity = 10
-	}
-
-	return &BucketedBuffer[T]{
-		buckets:        make([]*Bucket[T], bucketCapacity),
-		traceIndex:     make(map[string]int),
-		itemCapacity:   capacity,
-		bucketCapacity: bucketCapacity,
-		category:       category,
-		priority:       category.GetPriority(),
-		overflowPolicy: overflowPolicy,
-		recorder:       recorder,
-		batchSize:      batchSize,
-		timeout:        timeout,
-		lastFlushTime:  time.Now(),
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (b *BucketedBuffer[T]) Offer(item T) bool {
-	atomic.AddInt64(&b.offered, 1)
-
-	traceID := ""
-	if ta, ok := any(item).(TraceAware); ok {
-		if tid, hasTrace := ta.GetTraceID(); hasTrace {
-			traceID = tid
-		}
-	}
-
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.offerToBucket(item, traceID)
-}
+func (b *BucketedBuffer[T]) Offer(item T) bool { _ = "STUB: not implemented"; return false }
 
 func (b *BucketedBuffer[T]) offerToBucket(item T, traceID string) bool {
-	if traceID != "" {
-		if idx, exists := b.traceIndex[traceID]; exists {
-			bucket := b.buckets[idx]
-			if len(bucket.items) >= perBucketItemLimit {
-				delete(b.traceIndex, traceID)
-			} else {
-				bucket.items = append(bucket.items, item)
-				bucket.lastUpdatedAt = time.Now()
-				b.totalItems++
-				return true
-			}
-		}
-	}
-
-	if b.totalItems >= b.itemCapacity {
-		return b.handleOverflow(item, traceID)
-	}
-	if b.bucketCount >= b.bucketCapacity {
-		return b.handleOverflow(item, traceID)
-	}
-
-	bucket := &Bucket[T]{
-		traceID:       traceID,
-		items:         []T{item},
-		createdAt:     time.Now(),
-		lastUpdatedAt: time.Now(),
-	}
-	b.buckets[b.tail] = bucket
-	if traceID != "" {
-		b.traceIndex[traceID] = b.tail
-	}
-	b.tail = (b.tail + 1) % b.bucketCapacity
-	b.bucketCount++
-	b.totalItems++
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
 func (b *BucketedBuffer[T]) handleOverflow(item T, traceID string) bool {
-	switch b.overflowPolicy {
-	case OverflowPolicyDropOldest:
-		oldestBucket := b.buckets[b.head]
-		if oldestBucket == nil {
-			b.recordDroppedItem(item)
-			atomic.AddInt64(&b.dropped, 1)
-			if b.onDropped != nil {
-				b.onDropped(item, "buffer_full_invalid_state")
-			}
-			return false
-		}
-		if oldestBucket.traceID != "" {
-			delete(b.traceIndex, oldestBucket.traceID)
-		}
-		droppedCount := len(oldestBucket.items)
-		atomic.AddInt64(&b.dropped, int64(droppedCount))
-		for _, di := range oldestBucket.items {
-			b.recordDroppedItem(di)
-			if b.onDropped != nil {
-				b.onDropped(di, "buffer_full_drop_oldest_bucket")
-			}
-		}
-		b.totalItems -= droppedCount
-		b.bucketCount--
-		b.head = (b.head + 1) % b.bucketCapacity
-		// add new bucket
-		bucket := &Bucket[T]{traceID: traceID, items: []T{item}, createdAt: time.Now(), lastUpdatedAt: time.Now()}
-		b.buckets[b.tail] = bucket
-		if traceID != "" {
-			b.traceIndex[traceID] = b.tail
-		}
-		b.tail = (b.tail + 1) % b.bucketCapacity
-		b.bucketCount++
-		b.totalItems++
-		return true
-	case OverflowPolicyDropNewest:
-		atomic.AddInt64(&b.dropped, 1)
-		b.recordDroppedItem(item)
-		if b.onDropped != nil {
-			b.onDropped(item, "buffer_full_drop_newest")
-		}
-		return false
-	default:
-		atomic.AddInt64(&b.dropped, 1)
-		b.recordDroppedItem(item)
-		if b.onDropped != nil {
-			b.onDropped(item, "unknown_overflow_policy")
-		}
-		return false
-	}
+	_ = "STUB: not implemented"
+	return false
 }
 
-func (b *BucketedBuffer[T]) Poll() (T, bool) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	var zero T
-	if b.bucketCount == 0 {
-		return zero, false
-	}
-	bucket := b.buckets[b.head]
-	if bucket == nil || len(bucket.items) == 0 {
-		return zero, false
-	}
-	item := bucket.items[0]
-	bucket.items = bucket.items[1:]
-	b.totalItems--
-	if len(bucket.items) == 0 {
-		if bucket.traceID != "" {
-			delete(b.traceIndex, bucket.traceID)
-		}
-		b.buckets[b.head] = nil
-		b.head = (b.head + 1) % b.bucketCapacity
-		b.bucketCount--
-	}
-	return item, true
-}
+// add new bucket
 
-func (b *BucketedBuffer[T]) PollBatch(maxItems int) []T {
-	if maxItems <= 0 {
-		return nil
-	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.bucketCount == 0 {
-		return nil
-	}
-	res := make([]T, 0, maxItems)
-	for len(res) < maxItems && b.bucketCount > 0 {
-		bucket := b.buckets[b.head]
-		if bucket == nil {
-			break
-		}
-		n := maxItems - len(res)
-		if n > len(bucket.items) {
-			n = len(bucket.items)
-		}
-		res = append(res, bucket.items[:n]...)
-		bucket.items = bucket.items[n:]
-		b.totalItems -= n
-		if len(bucket.items) == 0 {
-			if bucket.traceID != "" {
-				delete(b.traceIndex, bucket.traceID)
-			}
-			b.buckets[b.head] = nil
-			b.head = (b.head + 1) % b.bucketCapacity
-			b.bucketCount--
-		}
-	}
-	return res
-}
+func (b *BucketedBuffer[T]) Poll() (T, bool) { _ = "STUB: not implemented"; return *new(T), false }
 
-func (b *BucketedBuffer[T]) PollIfReady() []T {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.bucketCount == 0 {
-		return nil
-	}
-	ready := b.totalItems >= b.batchSize || (b.timeout > 0 && time.Since(b.lastFlushTime) >= b.timeout)
-	if !ready {
-		return nil
-	}
-	oldest := b.buckets[b.head]
-	if oldest == nil {
-		return nil
-	}
-	items := oldest.items
-	if oldest.traceID != "" {
-		delete(b.traceIndex, oldest.traceID)
-	}
-	b.buckets[b.head] = nil
-	b.head = (b.head + 1) % b.bucketCapacity
-	b.totalItems -= len(items)
-	b.bucketCount--
-	b.lastFlushTime = time.Now()
-	return items
-}
+func (b *BucketedBuffer[T]) PollBatch(maxItems int) []T { _ = "STUB: not implemented"; return nil }
 
-func (b *BucketedBuffer[T]) Drain() []T {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.bucketCount == 0 {
-		return nil
-	}
-	res := make([]T, 0, b.totalItems)
-	for i := 0; i < b.bucketCount; i++ {
-		idx := (b.head + i) % b.bucketCapacity
-		bucket := b.buckets[idx]
-		if bucket != nil {
-			res = append(res, bucket.items...)
-			b.buckets[idx] = nil
-		}
-	}
-	b.traceIndex = make(map[string]int)
-	b.head = 0
-	b.tail = 0
-	b.totalItems = 0
-	b.bucketCount = 0
-	return res
-}
+func (b *BucketedBuffer[T]) PollIfReady() []T { _ = "STUB: not implemented"; return nil }
 
-func (b *BucketedBuffer[T]) Peek() (T, bool) {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	var zero T
-	if b.bucketCount == 0 {
-		return zero, false
-	}
-	bucket := b.buckets[b.head]
-	if bucket == nil || len(bucket.items) == 0 {
-		return zero, false
-	}
-	return bucket.items[0], true
-}
+func (b *BucketedBuffer[T]) Drain() []T { _ = "STUB: not implemented"; return nil }
 
-func (b *BucketedBuffer[T]) Size() int     { b.mu.RLock(); defer b.mu.RUnlock(); return b.totalItems }
-func (b *BucketedBuffer[T]) Capacity() int { b.mu.RLock(); defer b.mu.RUnlock(); return b.itemCapacity }
+func (b *BucketedBuffer[T]) Peek() (T, bool) { _ = "STUB: not implemented"; return *new(T), false }
+
+func (b *BucketedBuffer[T]) Size() int     { _ = "STUB: not implemented"; return 0 }
+func (b *BucketedBuffer[T]) Capacity() int { _ = "STUB: not implemented"; return 0 }
 func (b *BucketedBuffer[T]) Category() ratelimit.Category {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	return b.category
+	_ = "STUB: not implemented"
+	return *new(ratelimit.Category)
 }
+
 func (b *BucketedBuffer[T]) Priority() ratelimit.Priority {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	return b.priority
+	_ = "STUB: not implemented"
+	return *new(ratelimit.Priority)
 }
-func (b *BucketedBuffer[T]) IsEmpty() bool {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	return b.bucketCount == 0
-}
-func (b *BucketedBuffer[T]) IsFull() bool {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	return b.totalItems >= b.itemCapacity
-}
-func (b *BucketedBuffer[T]) Utilization() float64 {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	if b.itemCapacity == 0 {
-		return 0
-	}
-	return float64(b.totalItems) / float64(b.itemCapacity)
-}
-func (b *BucketedBuffer[T]) OfferedCount() int64  { return atomic.LoadInt64(&b.offered) }
-func (b *BucketedBuffer[T]) DroppedCount() int64  { return atomic.LoadInt64(&b.dropped) }
-func (b *BucketedBuffer[T]) AcceptedCount() int64 { return b.OfferedCount() - b.DroppedCount() }
-func (b *BucketedBuffer[T]) DropRate() float64 {
-	off := b.OfferedCount()
-	if off == 0 {
-		return 0
-	}
-	return float64(b.DroppedCount()) / float64(off)
-}
+
+func (b *BucketedBuffer[T]) IsEmpty() bool { _ = "STUB: not implemented"; return false }
+
+func (b *BucketedBuffer[T]) IsFull() bool { _ = "STUB: not implemented"; return false }
+
+func (b *BucketedBuffer[T]) Utilization() float64 { _ = "STUB: not implemented"; return 0 }
+
+func (b *BucketedBuffer[T]) OfferedCount() int64  { _ = "STUB: not implemented"; return 0 }
+func (b *BucketedBuffer[T]) DroppedCount() int64  { _ = "STUB: not implemented"; return 0 }
+func (b *BucketedBuffer[T]) AcceptedCount() int64 { _ = "STUB: not implemented"; return 0 }
+func (b *BucketedBuffer[T]) DropRate() float64    { _ = "STUB: not implemented"; return 0 }
 
 func (b *BucketedBuffer[T]) GetMetrics() BufferMetrics {
-	b.mu.RLock()
-	size := b.totalItems
-	util := 0.0
-	if b.itemCapacity > 0 {
-		util = float64(b.totalItems) / float64(b.itemCapacity)
-	}
-	b.mu.RUnlock()
-	return BufferMetrics{Category: b.category, Priority: b.priority, Capacity: b.itemCapacity, Size: size, Utilization: util, OfferedCount: b.OfferedCount(), DroppedCount: b.DroppedCount(), AcceptedCount: b.AcceptedCount(), DropRate: b.DropRate(), LastUpdated: time.Now()}
+	_ = "STUB: not implemented"
+	return *new(BufferMetrics)
 }
 
 func (b *BucketedBuffer[T]) SetDroppedCallback(callback func(item T, reason string)) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.onDropped = callback
-}
-func (b *BucketedBuffer[T]) Clear() {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	for i := 0; i < b.bucketCapacity; i++ {
-		b.buckets[i] = nil
-	}
-	b.traceIndex = make(map[string]int)
-	b.head = 0
-	b.tail = 0
-	b.totalItems = 0
-	b.bucketCount = 0
-}
-func (b *BucketedBuffer[T]) IsReadyToFlush() bool {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	if b.bucketCount == 0 {
-		return false
-	}
-	if b.totalItems >= b.batchSize {
-		return true
-	}
-	if b.timeout > 0 && time.Since(b.lastFlushTime) >= b.timeout {
-		return true
-	}
-	return false
-}
-func (b *BucketedBuffer[T]) MarkFlushed() {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.lastFlushTime = time.Now()
+	_ = "STUB: not implemented"
+	return
 }
 
-func (b *BucketedBuffer[T]) recordDroppedItem(item T) {
-	if ti, ok := any(item).(protocol.TelemetryItem); ok {
-		b.recorder.RecordItem(report.ReasonBufferOverflow, ti)
-	} else {
-		b.recorder.RecordOne(report.ReasonBufferOverflow, b.category)
-	}
-}
+func (b *BucketedBuffer[T]) Clear() { _ = "STUB: not implemented"; return }
+
+func (b *BucketedBuffer[T]) IsReadyToFlush() bool { _ = "STUB: not implemented"; return false }
+
+func (b *BucketedBuffer[T]) MarkFlushed() { _ = "STUB: not implemented"; return }
+
+func (b *BucketedBuffer[T]) recordDroppedItem(item T) { _ = "STUB: not implemented"; return }

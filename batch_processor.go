@@ -23,114 +23,25 @@ type batchProcessor[T any] struct {
 }
 
 func newBatchProcessor[T any](sendBatch func([]T)) *batchProcessor[T] {
-	return &batchProcessor[T]{
-		itemCh:       make(chan T, batchSize),
-		flushCh:      make(chan chan struct{}),
-		sendBatch:    sendBatch,
-		batchTimeout: defaultBatchTimeout,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WithBatchTimeout sets a custom batch timeout for the processor.
 // This is useful for testing or when different timing behavior is needed.
 func (p *batchProcessor[T]) WithBatchTimeout(timeout time.Duration) *batchProcessor[T] {
-	p.batchTimeout = timeout
-	return p
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (p *batchProcessor[T]) Send(item T) bool {
-	select {
-	case p.itemCh <- item:
-		return true
-	default:
-		return false
-	}
-}
+func (p *batchProcessor[T]) Send(item T) bool { _ = "STUB: not implemented"; return false }
 
-func (p *batchProcessor[T]) Start() {
-	p.startOnce.Do(func() {
-		ctx, cancel := context.WithCancel(context.Background()) //nolint:gosec // G118: cancel is stored in p.cancel and called in Shutdown()
-		p.cancel = cancel
-		p.wg.Add(1)
-		go p.run(ctx)
-	})
-}
+func (p *batchProcessor[T]) Start() { _ = "STUB: not implemented"; return }
 
-func (p *batchProcessor[T]) Flush(timeout <-chan struct{}) {
-	done := make(chan struct{})
-	select {
-	case p.flushCh <- done:
-		select {
-		case <-done:
-		case <-timeout:
-		}
-	case <-timeout:
-	}
-}
+//nolint:gosec // G118: cancel is stored in p.cancel and called in Shutdown()
 
-func (p *batchProcessor[T]) Shutdown() {
-	p.shutdownOnce.Do(func() {
-		if p.cancel != nil {
-			p.cancel()
-			p.wg.Wait()
-		}
-	})
-}
+func (p *batchProcessor[T]) Flush(timeout <-chan struct{}) { _ = "STUB: not implemented"; return }
 
-func (p *batchProcessor[T]) run(ctx context.Context) {
-	defer p.wg.Done()
-	var items []T
-	timer := time.NewTimer(0)
-	timer.Stop()
-	defer timer.Stop()
+func (p *batchProcessor[T]) Shutdown() { _ = "STUB: not implemented"; return }
 
-	for {
-		select {
-		case item := <-p.itemCh:
-			if len(items) == 0 {
-				timer.Reset(p.batchTimeout)
-			}
-			items = append(items, item)
-			if len(items) >= batchSize {
-				p.sendBatch(items)
-				items = nil
-			}
-		case <-timer.C:
-			if len(items) > 0 {
-				p.sendBatch(items)
-				items = nil
-			}
-		case done := <-p.flushCh:
-		flushDrain:
-			for {
-				select {
-				case item := <-p.itemCh:
-					items = append(items, item)
-				default:
-					break flushDrain
-				}
-			}
-
-			if len(items) > 0 {
-				p.sendBatch(items)
-				items = nil
-			}
-			close(done)
-		case <-ctx.Done():
-		drain:
-			for {
-				select {
-				case item := <-p.itemCh:
-					items = append(items, item)
-				default:
-					break drain
-				}
-			}
-
-			if len(items) > 0 {
-				p.sendBatch(items)
-			}
-			return
-		}
-	}
-}
+func (p *batchProcessor[T]) run(ctx context.Context) { _ = "STUB: not implemented"; return }

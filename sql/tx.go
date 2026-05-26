@@ -8,7 +8,7 @@ type sentryTx struct {
 }
 
 // Commit implements driver.Tx.
-func (t *sentryTx) Commit() error { return t.tx.Commit() }
+func (t *sentryTx) Commit() error { _ = "STUB: not implemented"; return nil }
 
 // Rollback implements driver.Tx.
-func (t *sentryTx) Rollback() error { return t.tx.Rollback() }
+func (t *sentryTx) Rollback() error { _ = "STUB: not implemented"; return nil }

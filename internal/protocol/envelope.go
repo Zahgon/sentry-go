@@ -2,8 +2,6 @@ package protocol
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"io"
 	"time"
 )
@@ -82,177 +80,58 @@ type EnvelopeItem struct {
 
 // NewEnvelope creates a new envelope with the given header and items.
 func NewEnvelope(header *EnvelopeHeader, items ...*EnvelopeItem) *Envelope {
-	envelope := &Envelope{
-		Header: header,
-		Items:  make([]*EnvelopeItem, 0, len(items)),
-	}
-	for _, item := range items {
-		envelope.AddItem(item)
-	}
-	return envelope
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // AddItem adds an item to the envelope.
-func (e *Envelope) AddItem(item *EnvelopeItem) {
-	if item == nil {
-		return
-	}
-	e.Items = append(e.Items, item)
-}
+func (e *Envelope) AddItem(item *EnvelopeItem) { _ = "STUB: not implemented"; return }
 
 // Serialize serializes the envelope to the Sentry envelope format.
 //
 // Format: Headers "\n" { Item } [ "\n" ]
 // Item: Headers "\n" Payload "\n".
-func (e *Envelope) Serialize() ([]byte, error) {
-	var buf bytes.Buffer
-
-	headerBytes, err := json.Marshal(e.Header)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal envelope header: %w", err)
-	}
-
-	if _, err := buf.Write(headerBytes); err != nil {
-		return nil, fmt.Errorf("failed to write envelope header: %w", err)
-	}
-
-	if _, err := buf.WriteString("\n"); err != nil {
-		return nil, fmt.Errorf("failed to write newline after envelope header: %w", err)
-	}
-
-	for _, item := range e.Items {
-		if err := e.writeItem(&buf, item); err != nil {
-			return nil, fmt.Errorf("failed to write envelope item: %w", err)
-		}
-	}
-
-	return buf.Bytes(), nil
-}
+func (e *Envelope) Serialize() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // WriteTo writes the envelope to the given writer in the Sentry envelope format.
-func (e *Envelope) WriteTo(w io.Writer) (int64, error) {
-	data, err := e.Serialize()
-	if err != nil {
-		return 0, err
-	}
-
-	n, err := w.Write(data)
-	return int64(n), err
-}
+func (e *Envelope) WriteTo(w io.Writer) (int64, error) { _ = "STUB: not implemented"; return 0, nil }
 
 // writeItem writes a single envelope item to the buffer.
 func (e *Envelope) writeItem(buf *bytes.Buffer, item *EnvelopeItem) error {
-	headerBytes, err := json.Marshal(item.Header)
-	if err != nil {
-		return fmt.Errorf("failed to marshal item header: %w", err)
-	}
-
-	if _, err := buf.Write(headerBytes); err != nil {
-		return fmt.Errorf("failed to write item header: %w", err)
-	}
-
-	if _, err := buf.WriteString("\n"); err != nil {
-		return fmt.Errorf("failed to write newline after item header: %w", err)
-	}
-
-	if len(item.Payload) > 0 {
-		if _, err := buf.Write(item.Payload); err != nil {
-			return fmt.Errorf("failed to write item payload: %w", err)
-		}
-	}
-
-	if _, err := buf.WriteString("\n"); err != nil {
-		return fmt.Errorf("failed to write newline after item payload: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
 // Size returns the total size of the envelope when serialized.
-func (e *Envelope) Size() (int, error) {
-	data, err := e.Serialize()
-	if err != nil {
-		return 0, err
-	}
-	return len(data), nil
-}
+func (e *Envelope) Size() (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 // NewEnvelopeItem creates a new envelope item with the specified type and payload.
 func NewEnvelopeItem(itemType EnvelopeItemType, payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:   itemType,
-			Length: &length,
-		},
-		Payload: payload,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // NewTransactionItem creates a new envelope item including the span count of the transaction.
 func NewTransactionItem(spanCount int, payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:      EnvelopeItemTypeTransaction,
-			Length:    &length,
-			SpanCount: spanCount,
-		},
-		Payload: payload,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // NewAttachmentItem creates a new envelope item for an attachment.
 // Parameters: filename, contentType, payload.
 func NewAttachmentItem(filename, contentType string, payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:        EnvelopeItemTypeAttachment,
-			Length:      &length,
-			ContentType: contentType,
-			Filename:    filename,
-		},
-		Payload: payload,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // NewLogItem creates a new envelope item for logs.
-func NewLogItem(itemCount int, payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:        EnvelopeItemTypeLog,
-			Length:      &length,
-			ItemCount:   &itemCount,
-			ContentType: "application/vnd.sentry.items.log+json",
-		},
-		Payload: payload,
-	}
-}
+func NewLogItem(itemCount int, payload []byte) *EnvelopeItem { _ = "STUB: not implemented"; return nil }
 
 // NewTraceMetricItem creates a new envelope item for trace metrics.
 func NewTraceMetricItem(itemCount int, payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:        EnvelopeItemTypeTraceMetric,
-			Length:      &length,
-			ItemCount:   &itemCount,
-			ContentType: "application/vnd.sentry.items.trace-metric+json",
-		},
-		Payload: payload,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // NewClientReportItem creates a new envelope item for client reports.
-func NewClientReportItem(payload []byte) *EnvelopeItem {
-	length := len(payload)
-	return &EnvelopeItem{
-		Header: &EnvelopeItemHeader{
-			Type:   EnvelopeItemTypeClientReport,
-			Length: &length,
-		},
-		Payload: payload,
-	}
-}
+func NewClientReportItem(payload []byte) *EnvelopeItem { _ = "STUB: not implemented"; return nil }

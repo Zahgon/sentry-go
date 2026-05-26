@@ -11,7 +11,6 @@ import (
 	"github.com/getsentry/sentry-go/_examples/grpc/server/examplepb"
 	sentrygrpc "github.com/getsentry/sentry-go/grpc"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 const grpcPort = ":50051"
@@ -23,38 +22,16 @@ type ExampleServiceServer struct {
 
 // UnaryExample handles unary gRPC requests.
 func (s *ExampleServiceServer) UnaryExample(ctx context.Context, req *examplepb.ExampleRequest) (*examplepb.ExampleResponse, error) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	fmt.Printf("Received Unary Request: %v\nMetadata: %v\n", req.Message, md)
-
-	// Simulate an error for demonstration
-	if req.Message == "error" {
-		return nil, fmt.Errorf("simulated unary error")
-	}
-
-	return &examplepb.ExampleResponse{Message: fmt.Sprintf("Hello, %s!", req.Message)}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// Simulate an error for demonstration
 
 // StreamExample handles bidirectional streaming gRPC requests.
 func (s *ExampleServiceServer) StreamExample(stream examplepb.ExampleService_StreamExampleServer) error {
-	for {
-		req, err := stream.Recv()
-		if err != nil {
-			fmt.Printf("Stream Recv Error: %v\n", err)
-			return err
-		}
-
-		fmt.Printf("Received Stream Message: %v\n", req.Message)
-
-		if req.Message == "error" {
-			return fmt.Errorf("simulated stream error")
-		}
-
-		err = stream.Send(&examplepb.ExampleResponse{Message: fmt.Sprintf("Echo: %s", req.Message)})
-		if err != nil {
-			fmt.Printf("Stream Send Error: %v\n", err)
-			return err
-		}
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func main() {

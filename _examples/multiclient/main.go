@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/getsentry/sentry-go"
@@ -9,17 +8,13 @@ import (
 
 type pickleIntegration struct{}
 
-func (pi *pickleIntegration) Name() string {
-	return "PickleIntegration"
-}
+func (pi *pickleIntegration) Name() string { _ = "STUB: not implemented"; return "" }
 
-func (pi *pickleIntegration) SetupOnce(client *sentry.Client) {
-	client.AddEventProcessor(pi.processor)
-}
+func (pi *pickleIntegration) SetupOnce(client *sentry.Client) { _ = "STUB: not implemented"; return }
 
 func (pi *pickleIntegration) processor(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-	event.Message = fmt.Sprintf("PickleRick Says: %s", event.Message)
-	return event
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func main() {

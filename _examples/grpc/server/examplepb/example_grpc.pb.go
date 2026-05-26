@@ -8,9 +8,8 @@ package examplepb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -38,27 +37,18 @@ type exampleServiceClient struct {
 }
 
 func NewExampleServiceClient(cc grpc.ClientConnInterface) ExampleServiceClient {
-	return &exampleServiceClient{cc}
+	_ = "STUB: not implemented"
+	return *new(ExampleServiceClient)
 }
 
 func (c *exampleServiceClient) UnaryExample(ctx context.Context, in *ExampleRequest, opts ...grpc.CallOption) (*ExampleResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ExampleResponse)
-	err := c.cc.Invoke(ctx, ExampleService_UnaryExample_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (c *exampleServiceClient) StreamExample(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ExampleRequest, ExampleResponse], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ExampleService_ServiceDesc.Streams[0], ExampleService_StreamExample_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[ExampleRequest, ExampleResponse]{ClientStream: stream}
-	return x, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
@@ -83,13 +73,20 @@ type ExampleServiceServer interface {
 type UnimplementedExampleServiceServer struct{}
 
 func (UnimplementedExampleServiceServer) UnaryExample(context.Context, *ExampleRequest) (*ExampleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnaryExample not implemented")
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
 func (UnimplementedExampleServiceServer) StreamExample(grpc.BidiStreamingServer[ExampleRequest, ExampleResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method StreamExample not implemented")
+	_ = "STUB: not implemented"
+	return nil
 }
-func (UnimplementedExampleServiceServer) mustEmbedUnimplementedExampleServiceServer() {}
-func (UnimplementedExampleServiceServer) testEmbeddedByValue()                        {}
+
+func (UnimplementedExampleServiceServer) mustEmbedUnimplementedExampleServiceServer() {
+	_ = "STUB: not implemented"
+	return
+}
+func (UnimplementedExampleServiceServer) testEmbeddedByValue() { _ = "STUB: not implemented"; return }
 
 // UnsafeExampleServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ExampleServiceServer will
@@ -99,36 +96,22 @@ type UnsafeExampleServiceServer interface {
 }
 
 func RegisterExampleServiceServer(s grpc.ServiceRegistrar, srv ExampleServiceServer) {
+	_ = "STUB: not implemented"
 	// If the following call pancis, it indicates UnimplementedExampleServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
-	s.RegisterService(&ExampleService_ServiceDesc, srv)
+	return
 }
 
 func _ExampleService_UnaryExample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExampleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExampleServiceServer).UnaryExample(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ExampleService_UnaryExample_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExampleServiceServer).UnaryExample(ctx, req.(*ExampleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func _ExampleService_StreamExample_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExampleServiceServer).StreamExample(&grpc.GenericServerStream[ExampleRequest, ExampleResponse]{ServerStream: stream})
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.

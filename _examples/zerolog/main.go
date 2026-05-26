@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+	"time"
+
 	"github.com/getsentry/sentry-go"
 	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
 	"github.com/rs/zerolog"
-	"os"
-	"time"
 )
 
 func main() {

@@ -127,15 +127,8 @@ func main() {
 
 // handler is an example of using `WithCtx` to link the metric with the correct request trace.
 func handler(w http.ResponseWriter, r *http.Request) {
+	_ = "STUB: not implemented"
 	// Use r.Context() and `WithCtx` to link the metric to the current request's span.
 	// The sentryhttp middleware adds the span to the request context.
-	meter.WithCtx(r.Context()).Count("page_views", 1,
-		sentry.WithAttributes(
-			attribute.String("path", r.URL.Path),
-			attribute.String("method", r.Method),
-		),
-	)
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Hello, World!")
+	return
 }

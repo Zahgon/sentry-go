@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/getsentry/sentry-go"
@@ -39,31 +38,6 @@ func main() {
 }
 
 func getExamplePage(ctx context.Context, httpClient *http.Client) error {
-	span := sentry.StartSpan(ctx, "getExamplePage")
-	ctx = span.Context()
-	defer span.Finish()
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://example.com", nil)
-	if err != nil {
-		return err
-	}
-
-	response, err := httpClient.Do(request)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if response.Body != nil {
-			_ = response.Body.Close()
-		}
-	}()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(body))
-
+	_ = "STUB: not implemented"
 	return nil
 }

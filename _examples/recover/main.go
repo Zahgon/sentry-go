@@ -1,42 +1,25 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 )
 
-func prettyPrint(v interface{}) string {
-	pp, _ := json.MarshalIndent(v, "", "  ")
-	return string(pp)
-}
+func prettyPrint(v interface{}) string { _ = "STUB: not implemented"; return "" }
 
-func fooErr() {
-	barErr()
-}
+func fooErr() { _ = "STUB: not implemented"; return }
 
-func barErr() {
-	bazErr()
-}
+func barErr() { _ = "STUB: not implemented"; return }
 
-func bazErr() {
-	panic(errors.New("sorry with error :("))
-}
+func bazErr() { _ = "STUB: not implemented"; return }
 
-func fooMsg() {
-	barMsg()
-}
+func fooMsg() { _ = "STUB: not implemented"; return }
 
-func barMsg() {
-	bazMsg()
-}
+func barMsg() { _ = "STUB: not implemented"; return }
 
-func bazMsg() {
-	panic("sorry with message :(")
-}
+func bazMsg() { _ = "STUB: not implemented"; return }
 
 func main() {
 	_ = sentry.Init(sentry.ClientOptions{

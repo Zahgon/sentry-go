@@ -1,15 +1,10 @@
 package sentryfasthttp
 
 import (
-	"bytes"
-	"context"
-	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/sentry-go/internal/debuglog"
 	"github.com/valyala/fasthttp"
 )
 
@@ -44,138 +39,34 @@ type Options struct {
 
 // New returns a struct that provides Handle method
 // that satisfy fasthttp.RequestHandler interface.
-func New(options Options) *Handler {
-	if options.Timeout == 0 {
-		options.Timeout = sentry.DefaultFlushTimeout
-	}
-
-	return &Handler{
-		repanic:         options.Repanic,
-		timeout:         options.Timeout,
-		waitForDelivery: options.WaitForDelivery,
-	}
-}
+func New(options Options) *Handler { _ = "STUB: not implemented"; return nil }
 
 // Handle wraps fasthttp.RequestHandler and recovers from caught panics.
 func (h *Handler) Handle(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		hub := GetHubFromContext(ctx)
-		if hub == nil {
-			hub = sentry.CurrentHub().Clone()
-		}
-
-		if client := hub.Client(); client != nil {
-			client.SetSDKIdentifier(sdkIdentifier)
-		}
-
-		r := convert(ctx)
-
-		options := []sentry.SpanOption{
-			sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader)),
-			sentry.WithOpName("http.server"),
-			sentry.WithTransactionSource(sentry.SourceRoute),
-			sentry.WithSpanOrigin(sentry.SpanOriginFastHTTP),
-		}
-
-		transaction := sentry.StartTransaction(
-			sentry.SetHubOnContext(ctx, hub),
-			fmt.Sprintf("%s %s", r.Method, string(ctx.Path())),
-			options...,
-		)
-		defer func() {
-			status := ctx.Response.StatusCode()
-			transaction.Status = sentry.HTTPtoSpanStatus(status)
-			transaction.SetData("http.response.status_code", status)
-			transaction.Finish()
-		}()
-
-		transaction.SetData("http.request.method", r.Method)
-
-		scope := hub.Scope()
-		scope.SetRequest(r)
-		scope.SetRequestBody(bytes.Clone(ctx.Request.Body()))
-		ctx.SetUserValue(valuesKey, hub)
-		ctx.SetUserValue(transactionKey, transaction)
-		defer h.recoverWithSentry(hub, ctx)
-
-		handler(ctx)
-	}
+	_ = "STUB: not implemented"
+	return *new(fasthttp.RequestHandler)
 }
 
 func (h *Handler) recoverWithSentry(hub *sentry.Hub, ctx *fasthttp.RequestCtx) {
-	if err := recover(); err != nil {
-		eventID := hub.RecoverWithContext(
-			context.WithValue(context.Background(), sentry.RequestContextKey, ctx),
-			err,
-		)
-		if eventID != nil && h.waitForDelivery {
-			hub.Flush(h.timeout)
-		}
-		if h.repanic {
-			panic(err)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // GetHubFromContext retrieves attached *sentry.Hub instance from fasthttp.RequestCtx.
-func GetHubFromContext(ctx *fasthttp.RequestCtx) *sentry.Hub {
-	hub := ctx.UserValue(valuesKey)
-	if hub, ok := hub.(*sentry.Hub); ok {
-		return hub
-	}
-	return nil
-}
+func GetHubFromContext(ctx *fasthttp.RequestCtx) *sentry.Hub { _ = "STUB: not implemented"; return nil }
 
 // SetHubOnContext attaches the *sentry.Hub instance to the fasthttp.RequestCtx.
-func SetHubOnContext(ctx *fasthttp.RequestCtx, hub *sentry.Hub) {
-	ctx.SetUserValue(valuesKey, hub)
-}
+func SetHubOnContext(ctx *fasthttp.RequestCtx, hub *sentry.Hub) { _ = "STUB: not implemented"; return }
 
 // GetSpanFromContext retrieves attached *sentry.Span instance from *fasthttp.RequestCtx.
 // If there is no transaction on *fasthttp.RequestCtx, it will return nil.
 func GetSpanFromContext(ctx *fasthttp.RequestCtx) *sentry.Span {
-	if span, ok := ctx.UserValue(transactionKey).(*sentry.Span); ok {
-		return span
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
-func convert(ctx *fasthttp.RequestCtx) *http.Request {
-	defer func() {
-		if err := recover(); err != nil {
-			debuglog.Printf("%v", err)
-		}
-	}()
+func convert(ctx *fasthttp.RequestCtx) *http.Request { _ = "STUB: not implemented"; return nil }
 
-	r := new(http.Request)
+// Headers
 
-	r.Method = string(ctx.Method())
-
-	uri := ctx.URI()
-	r.URL = &url.URL{Path: string(uri.Path())}
-	r.URL.RawQuery = string(uri.QueryString())
-
-	if parsedURL, err := url.Parse(fmt.Sprintf("%s://%s%s", uri.Scheme(), uri.Host(), uri.Path())); err == nil {
-		r.URL = parsedURL
-		r.URL.RawQuery = string(uri.QueryString())
-	}
-
-	host := string(ctx.Host())
-	r.Host = host
-
-	// Headers
-	r.Header = make(http.Header)
-	r.Header.Add("Host", host)
-	ctx.Request.Header.VisitAll(func(key, value []byte) {
-		r.Header.Add(string(key), string(value))
-	})
-
-	// Cookies
-	ctx.Request.Header.VisitAllCookie(func(key, value []byte) {
-		r.AddCookie(&http.Cookie{Name: string(key), Value: string(value)})
-	})
-
-	r.RemoteAddr = ctx.RemoteAddr().String()
-
-	return r
-}
+// Cookies

@@ -6,17 +6,14 @@ import "time"
 type Deadline time.Time
 
 // After reports whether the deadline d is after other.
-func (d Deadline) After(other Deadline) bool {
-	return time.Time(d).After(time.Time(other))
-}
+func (d Deadline) After(other Deadline) bool { _ = "STUB: not implemented"; return false }
 
 // Equal reports whether d and e represent the same deadline.
-func (d Deadline) Equal(e Deadline) bool {
-	return time.Time(d).Equal(time.Time(e))
-}
+func (d Deadline) Equal(e Deadline) bool { _ = "STUB: not implemented"; return false }
 
 // String returns the deadline formatted for debugging.
 func (d Deadline) String() string {
+	_ = "STUB: not implemented"
 	// Like time.Time.String, but without the monotonic clock reading.
-	return time.Time(d).Round(0).String()
+	return ""
 }

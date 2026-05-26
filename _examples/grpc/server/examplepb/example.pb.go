@@ -7,10 +7,10 @@
 package examplepb
 
 import (
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -28,42 +28,21 @@ type ExampleRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ExampleRequest) Reset() {
-	*x = ExampleRequest{}
-	mi := &file_example_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
+func (x *ExampleRequest) Reset() { _ = "STUB: not implemented"; return }
 
-func (x *ExampleRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
+func (x *ExampleRequest) String() string { _ = "STUB: not implemented"; return "" }
 
-func (*ExampleRequest) ProtoMessage() {}
+func (*ExampleRequest) ProtoMessage() { _ = "STUB: not implemented"; return }
 
 func (x *ExampleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_example_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
+	_ = "STUB: not implemented"
+	return *new(protoreflect.Message)
 }
 
 // Deprecated: Use ExampleRequest.ProtoReflect.Descriptor instead.
-func (*ExampleRequest) Descriptor() ([]byte, []int) {
-	return file_example_proto_rawDescGZIP(), []int{0}
-}
+func (*ExampleRequest) Descriptor() ([]byte, []int) { _ = "STUB: not implemented"; return nil, nil }
 
-func (x *ExampleRequest) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
+func (x *ExampleRequest) GetMessage() string { _ = "STUB: not implemented"; return "" }
 
 // ExampleResponse is the response message.
 type ExampleResponse struct {
@@ -73,42 +52,21 @@ type ExampleResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ExampleResponse) Reset() {
-	*x = ExampleResponse{}
-	mi := &file_example_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
+func (x *ExampleResponse) Reset() { _ = "STUB: not implemented"; return }
 
-func (x *ExampleResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
+func (x *ExampleResponse) String() string { _ = "STUB: not implemented"; return "" }
 
-func (*ExampleResponse) ProtoMessage() {}
+func (*ExampleResponse) ProtoMessage() { _ = "STUB: not implemented"; return }
 
 func (x *ExampleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_example_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
+	_ = "STUB: not implemented"
+	return *new(protoreflect.Message)
 }
 
 // Deprecated: Use ExampleResponse.ProtoReflect.Descriptor instead.
-func (*ExampleResponse) Descriptor() ([]byte, []int) {
-	return file_example_proto_rawDescGZIP(), []int{1}
-}
+func (*ExampleResponse) Descriptor() ([]byte, []int) { _ = "STUB: not implemented"; return nil, nil }
 
-func (x *ExampleResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
+func (x *ExampleResponse) GetMessage() string { _ = "STUB: not implemented"; return "" }
 
 var File_example_proto protoreflect.FileDescriptor
 
@@ -141,12 +99,7 @@ var (
 	file_example_proto_rawDescData = file_example_proto_rawDesc
 )
 
-func file_example_proto_rawDescGZIP() []byte {
-	file_example_proto_rawDescOnce.Do(func() {
-		file_example_proto_rawDescData = protoimpl.X.CompressGZIP(file_example_proto_rawDescData)
-	})
-	return file_example_proto_rawDescData
-}
+func file_example_proto_rawDescGZIP() []byte { _ = "STUB: not implemented"; return nil }
 
 var file_example_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_example_proto_goTypes = []any{
@@ -165,27 +118,5 @@ var file_example_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_example_proto_init() }
-func file_example_proto_init() {
-	if File_example_proto != nil {
-		return
-	}
-	type x struct{}
-	out := protoimpl.TypeBuilder{
-		File: protoimpl.DescBuilder{
-			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_example_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   2,
-			NumExtensions: 0,
-			NumServices:   1,
-		},
-		GoTypes:           file_example_proto_goTypes,
-		DependencyIndexes: file_example_proto_depIdxs,
-		MessageInfos:      file_example_proto_msgTypes,
-	}.Build()
-	File_example_proto = out.File
-	file_example_proto_rawDesc = nil
-	file_example_proto_goTypes = nil
-	file_example_proto_depIdxs = nil
-}
+func init()                    { file_example_proto_init() }
+func file_example_proto_init() { _ = "STUB: not implemented"; return }
